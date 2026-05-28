@@ -45,38 +45,56 @@ export default function Register() {
   };
 
   const handleSubmit = async (e) => {
-
   e.preventDefault();
 
-  setError('');
+  // Run validation
+  const validationErrors = validate();
+
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
+
+  setApiError('');
+  setLoading(true);
 
   try {
+    // Remove confirmPassword before sending to backend
+    const payload = {
+      businessName: form.businessName,
+      ownerName: form.ownerName,
+      email: form.email,
+      phone: form.phone,
+      address: form.address,
+      password: form.password,
+    };
 
-    const res = await register(form);
+    const res = await register(payload);
 
-    // REGISTRATION FAILED
-    if (!res.data.token) {
-      setError(res.data.message || 'Registration failed');
+    // Registration failed
+    if (!res.data?.token) {
+      setApiError(res.data?.message || 'Registration failed');
       return;
     }
 
-    // Save auth
+    // Save JWT/auth
     const success = saveAuth(res.data.token);
 
     if (!success) {
-      setError('Authentication failed');
+      setApiError('Authentication failed');
       return;
     }
 
-    // SUCCESS
+    // Success
     navigate('/login');
 
   } catch (err) {
-
-    setError(
+    setApiError(
       err.response?.data?.message ||
       'Registration failed'
     );
+  } finally {
+    setLoading(false);
   }
 };
 
