@@ -143,34 +143,40 @@ html, body, #root {
 .field__input:focus { border-color: var(--neon); box-shadow: 0 10px 30px rgba(46,240,138,0.06); transform: translateY(-1px); }
 .field__input--error { border-color: rgba(255,80,80,0.4); }
 
-/* Add subtle green tint to inputs that have content */
-.field__input:not(:placeholder-shown) {
+/* Add subtle green tint to inputs that have content (typed or valid) */
+.field__input:not(:placeholder-shown),
+.field__input:valid {
   /* inset overlay keeps original dark background while tinting */
   box-shadow: inset 0 0 0 1000px rgba(76,164,85,0.05);
 }
 
 /* Ensure focused + filled keeps tint but shows neon border */
-.field__input:not(:placeholder-shown):focus {
+.field__input:not(:placeholder-shown):focus,
+.field__input:valid:focus {
   border-color: var(--neon);
   box-shadow: inset 0 0 0 1000px rgba(76,164,85,0.18), 0 10px 30px rgba(46,240,138,0.06);
 }
 
-/* Keep inputs dark when browser autofills (Chrome) */
+/* Keep inputs dark when browser autofills (Chrome/Blink) and preserve tint using background-image overlay */
 input.field__input:-webkit-autofill,
 input.field__input:-webkit-autofill:focus,
 input.field__input:-webkit-autofill:hover {
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff !important;
-  /* keep the dark background plus green tint */
   background-color: rgba(5,8,6,0.6) !important;
   -webkit-box-shadow: 0 0 0 30px rgba(5,8,6,0.6) inset !important;
-  box-shadow: inset 0 0 0 30px rgba(5,8,6,0.6) !important, inset 0 0 0 1000px rgba(76,164,85,0.20) !important;
+  /* subtle green overlay using background-image so tint shows without breaking autofill box-shadow hacks */
+  background-image: linear-gradient(rgba(76,164,85,0.05), rgba(76,164,85,0.05)) !important;
+  background-blend-mode: overlay !important;
 }
 
 /* Firefox autofill tint */
-input.field__input:-moz-autofill {
-  box-shadow: 0 0 0 30px rgba(5,8,6,0.6) inset !important, inset 0 0 0 1000px rgba(76,164,85,0.20) !important;
+input.field__input:-moz-autofill,
+input.field__input:-moz-autofill:focus {
+  box-shadow: 0 0 0 30px rgba(5,8,6,0.6) inset !important;
   -moz-text-fill-color: #ffffff !important;
+  background-image: linear-gradient(rgba(76,164,85,0.05), rgba(76,164,85,0.05)) !important;
+  background-blend-mode: overlay !important;
 }
 
 .field__password-wrap { position: relative; }
