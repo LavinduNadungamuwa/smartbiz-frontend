@@ -133,7 +133,8 @@ html, body, #root {
   padding: 11px 14px;
   font-family: 'DM Sans', sans-serif;
   font-size: 14px;
-  color: #e8fef0;
+  color: #ffffff; /* typing text color */
+  caret-color: #ffffff;
   outline: none;
   transition: border-color 0.14s, box-shadow 0.14s, transform 0.12s;
   width: 100%;
@@ -141,6 +142,36 @@ html, body, #root {
 .field__input::placeholder { color: rgba(200,240,200,0.26); }
 .field__input:focus { border-color: var(--neon); box-shadow: 0 10px 30px rgba(46,240,138,0.06); transform: translateY(-1px); }
 .field__input--error { border-color: rgba(255,80,80,0.4); }
+
+/* Add subtle green tint to inputs that have content */
+.field__input:not(:placeholder-shown) {
+  /* inset overlay keeps original dark background while tinting */
+  box-shadow: inset 0 0 0 1000px rgba(76,164,85,0.05);
+}
+
+/* Ensure focused + filled keeps tint but shows neon border */
+.field__input:not(:placeholder-shown):focus {
+  border-color: var(--neon);
+  box-shadow: inset 0 0 0 1000px rgba(76,164,85,0.18), 0 10px 30px rgba(46,240,138,0.06);
+}
+
+/* Keep inputs dark when browser autofills (Chrome) */
+input.field__input:-webkit-autofill,
+input.field__input:-webkit-autofill:focus,
+input.field__input:-webkit-autofill:hover {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff !important;
+  /* keep the dark background plus green tint */
+  background-color: rgba(5,8,6,0.6) !important;
+  -webkit-box-shadow: 0 0 0 30px rgba(5,8,6,0.6) inset !important;
+  box-shadow: inset 0 0 0 30px rgba(5,8,6,0.6) !important, inset 0 0 0 1000px rgba(76,164,85,0.20) !important;
+}
+
+/* Firefox autofill tint */
+input.field__input:-moz-autofill {
+  box-shadow: 0 0 0 30px rgba(5,8,6,0.6) inset !important, inset 0 0 0 1000px rgba(76,164,85,0.20) !important;
+  -moz-text-fill-color: #ffffff !important;
+}
 
 .field__password-wrap { position: relative; }
 .field__password-wrap .field__input { padding-right: 44px; }
