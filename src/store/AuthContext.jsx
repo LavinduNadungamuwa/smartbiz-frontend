@@ -1,7 +1,6 @@
-import { createContext, useContext, useState } from 'react';
+import { useState } from 'react';
 import { decodeToken, logout as apiLogout } from '../api/auth';
-
-const AuthContext = createContext(null);
+import AuthContext from './authContextValue';
 
 function isValidTokenString(t) {
   return typeof t === 'string' && t.trim() !== '' && t !== 'undefined' && t !== 'null' && t.split('.').length === 3;
@@ -72,5 +71,3 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   );
 }
-
-export const useAuth = () => useContext(AuthContext);
