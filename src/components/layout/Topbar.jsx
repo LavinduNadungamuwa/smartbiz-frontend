@@ -1,6 +1,10 @@
 import Icon from '../ui/Icon';
 
 export default function Topbar({ onMenuClick }) {
+  const user = readSavedUser();
+  const email = user.sub || user.email || 'smartbiz@account.com';
+  const initials = email.slice(0, 2).toUpperCase();
+
   return (
     <header className="topbar">
       <button className="icon-button mobile-menu" type="button" onClick={onMenuClick} aria-label="Open navigation">
@@ -20,13 +24,21 @@ export default function Topbar({ onMenuClick }) {
           <span className="notification-dot" />
         </button>
         <button className="business-switcher" type="button">
-          Brightline Retail
+          {user.businessId ? `Business #${user.businessId}` : 'SmartBiz Business'}
           <span>v</span>
         </button>
         <div className="avatar" aria-label="User profile">
-          AP
+          {initials}
         </div>
       </div>
     </header>
   );
+}
+
+function readSavedUser() {
+  try {
+    return JSON.parse(localStorage.getItem('sb_user') || '{}');
+  } catch {
+    return {};
+  }
 }

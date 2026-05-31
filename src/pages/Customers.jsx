@@ -1,25 +1,44 @@
 import Button from '../components/ui/Button';
 import DataTable from '../components/ui/DataTable';
 import EmptyState from '../components/ui/EmptyState';
+import { ErrorState, LoadingState } from '../components/ui/LoadState';
 import PageHeader from '../components/ui/PageHeader';
 import Toolbar from '../components/ui/Toolbar';
-import { customers } from '../data/businessData';
+import { useBusinessData } from '../api/resources';
 
 export default function Customers() {
+  const { data, loading, error, reload } = useBusinessData();
+
+  if (loading) return <LoadingState message="Loading customers..." />;
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+
+  const rows = data.customers.map((customer) => [
+    customer.fullName,
+    customer.email,
+    customer.phone,
+    '-',
+    '-',
+  ]);
+
   return (
     <div className="page">
       <PageHeader
         eyebrow="CRM"
         title="Customers"
-        description="Search, filter, and manage customer purchase history."
+        description="Live customer records from smartbiz_db."
         actions={<Button icon="plus">Add customer</Button>}
       />
       <Toolbar searchPlaceholder="Search customers..." filters={['Active', 'High value', 'Recent purchase']} />
       <section className="card">
-        <DataTable columns={['Name', 'Email', 'Phone', 'Total Purchases', 'Last Purchase']} rows={customers} actions />
-        <div className="pagination"><button>Previous</button><span>Page 1 of 8</span><button>Next</button></div>
+        {rows.length ? (
+          <>
+            <DataTable columns={['Name', 'Email', 'Phone', 'Total Purchases', 'Last Purchase']} rows={rows} actions />
+            <div className="pagination"><button>Previous</button><span>{rows.length} customers</span><button>Next</button></div>
+          </>
+        ) : (
+          <EmptyState title="No customers yet" description="Customer records from the database will appear here." action="Add customer" />
+        )}
       </section>
-      <EmptyState title="No customers yet" description="When your customer list is empty, invite or add your first customer here." action="Add customer" />
     </div>
   );
 }
