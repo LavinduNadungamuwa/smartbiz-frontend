@@ -1400,7 +1400,8 @@ input {
 }
 
 .form-field input,
-.form-field textarea {
+.form-field textarea,
+.form-field select {
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
@@ -1409,16 +1410,23 @@ input {
   color: var(--text);
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
+  height: 40px;
+}
+
+.form-field textarea {
+  height: auto;
 }
 
 .form-field input:focus,
-.form-field textarea:focus {
+.form-field textarea:focus,
+.form-field select:focus {
   border-color: var(--blue);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .form-field input.error,
-.form-field textarea.error {
+.form-field textarea.error,
+.form-field select.error {
   border-color: var(--red);
 }
 
