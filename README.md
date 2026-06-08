@@ -1,8 +1,9 @@
-SmartBiz — AI-Powered Business Management Suite
+SmartBiz — AI-Powered Business Management Suite 
+-
 A full-stack ERP-lite platform for small and medium businesses to manage sales, inventory, customers, and daily operations — with OpenAI-powered insights, report generation, and email/content writing built in.
----
-Features
 
+Features
+-
 Business Owner (Web & Mobile)
 Dashboard overview — sales, inventory, profits at a glance
 Customer and supplier management
@@ -16,8 +17,9 @@ Admin Panel
 Manage registered businesses and users
 Review AI usage logs and system-wide statistics
 Manage subscription or pricing plans
----
+
 Tech Stack
+-
 Layer	Technology
 Frontend (Web)	React + Vite, React Router v6, Axios, Recharts
 Frontend (Mobile)	React Native (planned)
@@ -25,7 +27,7 @@ Backend	Spring Boot 3, MySQL
 AI Integration	OpenAI API (GPT)
 Authentication	JWT (JSON Web Tokens)
 Deployment	AWS EC2 with custom domain
----
+
 Project Structure
 ```
 smartbiz/
@@ -54,14 +56,15 @@ smartbiz/
 ```
 ---
 Getting Started
-
+-
 Prerequisites
 Node.js 18+
 Java 17+
 MySQL 8+
 An OpenAI API key
----
+
 Backend Setup
+-
 Create the database
 ```sql
 CREATE DATABASE smartbiz_db;
