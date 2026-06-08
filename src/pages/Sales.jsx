@@ -131,8 +131,10 @@ export default function Sales() {
       tax: sale.tax !== undefined ? String(sale.tax) : '0',
       discount: sale.discount !== undefined ? String(sale.discount) : '0',
       notes: sale.notes || '',
+      // Include productName so edit modal can show read-only product labels
       items: saleItems.map((item) => ({
         productId: item.productId !== undefined ? String(item.productId) : '',
+        productName: item.productName || item.product?.productName || productById[item.productId]?.productName || `Product #${item.productId}`,
         quantity: item.quantity || 1,
         unitPrice: item.unitPrice !== undefined ? String(item.unitPrice) : '',
       })),
@@ -219,8 +221,9 @@ export default function Sales() {
     } else {
       formData.items.forEach((item, index) => {
         const itemErr = {};
-        if (!item.productId) itemErr.productId = 'Required';
-        
+        // Only require product selection when creating a sale. In edit mode we show existing products and do not ask user to re-select them.
+        if (modalMode === 'create' && !item.productId) itemErr.productId = 'Required';
+
         const qty = Number(item.quantity);
         if (isNaN(qty) || qty <= 0 || !Number.isInteger(qty)) {
           itemErr.quantity = 'Must be positive integer';
@@ -319,6 +322,29 @@ export default function Sales() {
       status(sale.status),
     ];
   });
+
+  // Normalize items for the view modal so the table always has usable fields and totals
+  const viewItems = selectedSale
+    ? (() => {
+        const itemsRaw = selectedSale.items || selectedSale.saleItems || selectedSale.sale_items || [];
+        if (!Array.isArray(itemsRaw)) return [];
+        return itemsRaw.map((item) => {
+          const productId = item.productId ?? item.product_id ?? item.product?.id ?? item.product?.productId;
+          const productName =
+            item.productName || item.product?.productName || item.product?.name || productById[productId]?.productName || `Product #${productId}`;
+          const quantity = Number(item.quantity ?? item.qty ?? 0);
+          const unitPrice = Number(item.unitPrice ?? item.unit_price ?? item.price ?? item.unit?.price ?? 0);
+          const totalPrice = Number(item.totalPrice ?? item.total_price ?? item.total ?? (quantity * unitPrice) ?? 0);
+          return {
+            productId,
+            productName,
+            quantity: isNaN(quantity) ? 0 : quantity,
+            unitPrice: isNaN(unitPrice) ? 0 : unitPrice,
+            totalPrice: isNaN(totalPrice) ? 0 : totalPrice,
+          };
+        });
+      })()
+    : [];
 
   return (
     <div className="page">
@@ -441,20 +467,30 @@ export default function Sales() {
                     </div>
 
                     <div className="form-field">
-                      <label htmlFor="invoiceNumber">Invoice Number *</label>
-                      <input
-                        type="text"
-                        id="invoiceNumber"
-                        className={formErrors.invoiceNumber ? 'error' : ''}
-                        value={formData.invoiceNumber}
-                        onChange={(e) => {
-                          setFormData({ ...formData, invoiceNumber: e.target.value });
-                          setFormErrors({ ...formErrors, invoiceNumber: '' });
-                        }}
-                        placeholder="e.g. SALE-1024"
-                        required
-                      />
-                      {formErrors.invoiceNumber && <span className="error-msg">{formErrors.invoiceNumber}</span>}
+                      {/* Invoice: editable when creating, read-only display when editing */}
+                      {modalMode === 'create' ? (
+                        <>
+                          <label htmlFor="invoiceNumber">Invoice Number *</label>
+                          <input
+                            type="text"
+                            id="invoiceNumber"
+                            className={formErrors.invoiceNumber ? 'error' : ''}
+                            value={formData.invoiceNumber}
+                            onChange={(e) => {
+                              setFormData({ ...formData, invoiceNumber: e.target.value });
+                              setFormErrors({ ...formErrors, invoiceNumber: '' });
+                            }}
+                            placeholder="e.g. SALE-1024"
+                            required
+                          />
+                          {formErrors.invoiceNumber && <span className="error-msg">{formErrors.invoiceNumber}</span>}
+                        </>
+                      ) : (
+                        <>
+                          <label>Invoice Number</label>
+                          <div style={{ padding: '10px 12px', borderRadius: '6px', background: 'var(--app-bg)', fontWeight: 700 }}>{formData.invoiceNumber || (selectedSale && (selectedSale.invoiceNumber || `SALE-${selectedSale.id}`))}</div>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -507,7 +543,10 @@ export default function Sales() {
                   <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <h4 style={{ margin: 0, fontWeight: 700 }}>Products List *</h4>
-                      <Button variant="ghost" icon="plus" onClick={addItemRow}>Add Product</Button>
+                      {/* Disable adding new products when editing an existing sale; editing should only adjust quantities/prices of existing items */}
+                      {modalMode === 'create' && (
+                        <Button variant="ghost" icon="plus" onClick={addItemRow}>Add Product</Button>
+                      )}
                     </div>
                     {formErrors.itemsGlobal && (
                       <div className="error-msg" style={{ marginBottom: '12px', display: 'block' }}>{formErrors.itemsGlobal}</div>
@@ -518,23 +557,31 @@ export default function Sales() {
                         const itemErr = formErrors.items?.[idx] || {};
                         return (
                           <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', background: 'var(--app-bg)', padding: '12px', borderRadius: '10px' }}>
-                            <div style={{ flex: 3 }} className="form-field">
-                              <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Product</label>
-                              <select
-                                className={itemErr.productId ? 'error' : ''}
-                                value={item.productId}
-                                onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
-                                required
-                              >
-                                <option value="">Select Product</option>
-                                {(data.products || []).map((product) => (
-                                  <option key={product.id} value={product.id}>
-                                    {product.productName} ({currency(product.unitPrice)})
-                                  </option>
-                                ))}
-                              </select>
-                              {itemErr.productId && <span className="error-msg">{itemErr.productId}</span>}
-                            </div>
+                            {/* Product: select when creating, read-only label when editing */}
+                            {modalMode === 'create' ? (
+                              <div style={{ flex: 3 }} className="form-field">
+                                <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Product</label>
+                                <select
+                                  className={itemErr.productId ? 'error' : ''}
+                                  value={item.productId}
+                                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
+                                  required
+                                >
+                                  <option value="">Select Product</option>
+                                  {(data.products || []).map((product) => (
+                                    <option key={product.id} value={product.id}>
+                                      {product.productName} ({currency(product.unitPrice)})
+                                    </option>
+                                  ))}
+                                </select>
+                                {itemErr.productId && <span className="error-msg">{itemErr.productId}</span>}
+                              </div>
+                            ) : (
+                              <div style={{ flex: 3 }} className="form-field">
+                                <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Product</label>
+                                <div style={{ padding: '10px 12px', borderRadius: '6px', background: 'var(--app-bg)', fontWeight: 700 }}>{item.productName || productById[item.productId]?.productName || `Product #${item.productId}`}</div>
+                              </div>
+                            )}
 
                             <div style={{ flex: 1 }} className="form-field">
                               <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Qty</label>
@@ -731,7 +778,7 @@ export default function Sales() {
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '8px' }}>
                 <label style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '8px' }}>Purchased Items</label>
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: 0 }}>
                     <thead>
                       <tr>
                         <th style={{ textAlign: 'left', padding: '10px' }}>Product</th>
@@ -741,14 +788,14 @@ export default function Sales() {
                       </tr>
                     </thead>
                     <tbody>
-                      {(selectedSale.items || selectedSale.saleItems || []).map((item, idx) => (
+                      {viewItems.map((item, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                          <td style={{ padding: '10px' }}>
-                            {item.productName || productById[item.productId]?.productName || `Product #${item.productId}`}
+                          <td style={{ padding: '10px', whiteSpace: 'normal', overflow: 'hidden', textOverflow: 'ellipsis', wordBreak: 'break-word' }}>
+                            {item.productName}
                           </td>
                           <td style={{ textAlign: 'center', padding: '10px' }}>{item.quantity}</td>
                           <td style={{ textAlign: 'right', padding: '10px' }}>{currency(item.unitPrice)}</td>
-                          <td style={{ textAlign: 'right', padding: '10px' }}>{currency(item.totalPrice || (item.quantity * item.unitPrice))}</td>
+                          <td style={{ textAlign: 'right', padding: '10px' }}>{currency(item.totalPrice)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -757,10 +804,10 @@ export default function Sales() {
               </div>
 
               {/* Totals Summary */}
-              <div style={{ background: 'var(--app-bg)', padding: '16px', borderRadius: '12px', display: 'grid', gap: '8px', marginLeft: 'auto', width: '280px' }}>
+              <div style={{ background: 'var(--app-bg)', padding: '16px', borderRadius: '12px', display: 'grid', gap: '8px', marginLeft: 'auto', width: 'min(280px, 100%)', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                   <span>Subtotal:</span>
-                  <strong>{currency(selectedSale.subtotal || (selectedSale.items || selectedSale.saleItems || []).reduce((s, i) => s + (i.quantity * i.unitPrice), 0))}</strong>
+                  <strong>{currency(selectedSale.subtotal || (viewItems || []).reduce((s, i) => s + (i.quantity * i.unitPrice), 0))}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
                   <span>Tax:</span>
