@@ -85,7 +85,7 @@ cd smartbiz-backend
 ./mvnw spring-boot:run
 ```
 The API will start at `http://localhost:8080`. Tables are created automatically via `spring.jpa.hibernate.ddl-auto=update`.
----
+
 Frontend Setup
 Install dependencies
 ```bash
@@ -103,8 +103,9 @@ Build for production
 npm run build
 ```
 Output goes to the `dist/` folder, ready to deploy to a web server or S3.
----
+
 API Overview
+-
 All endpoints (except auth) require a `Bearer` token in the `Authorization` header.
 Resource	Base path
 Auth	`POST /api/auth/register`, `POST /api/auth/login`
@@ -146,19 +147,21 @@ Create a `.env` file in `smartbiz-frontend/` if you need to override the API bas
 VITE_API_BASE_URL=http://localhost:8080
 ```
 Then update `src/api/axiosClient.js` to use `import.meta.env.VITE_API_BASE_URL`.
----
+
 Deployment (AWS EC2)
+-
 Build the frontend: `npm run build` → upload `dist/` to your server or S3 + CloudFront
 Package the backend: `./mvnw package` → upload the `.jar` to EC2
 Run with: `java -jar smartbiz-backend.jar --spring.config.location=/etc/smartbiz/application.properties`
 Use Nginx as a reverse proxy — serve the frontend on port 80/443, proxy `/api/*` to port 8080
 Set up SSL with Let's Encrypt (`certbot`)
----
-Security Notes
+
+Security Note
+-
 JWT tokens are signed server-side and validated on every request
 Role-based access control: `ROLE_ADMIN` can create/update/delete; `ROLE_USER` has read access
 Never expose your `openai.api.key` or database password in the repository — use environment variables or AWS Secrets Manager in production
 Tighten CORS in `CorsConfig.java` before going live — replace `allowedOrigins("*")` with your actual domain
----
+
 
 This project was developed as a final project for the AFSD programme. 
