@@ -744,7 +744,7 @@ input {
 }
 
 .status-badge.pending,
-.status-badge.processing,
+.status-badge.pending,
 .status-badge.low-stock {
   color: #b76b00;
   background: var(--orange-soft);

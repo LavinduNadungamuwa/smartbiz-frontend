@@ -32,7 +32,7 @@ export default function Sales() {
     invoiceNumber: '',
     saleDate: '',
     status: 'COMPLETED',
-    paymentMethod: 'Cash',
+    paymentMethod: 'CASH',
     tax: '0',
     discount: '0',
     notes: '',
@@ -74,8 +74,8 @@ export default function Sales() {
     if (activeFilter === 'Completed') {
       return sale.status?.toUpperCase() === 'COMPLETED';
     }
-    if (activeFilter === 'Processing') {
-      return sale.status?.toUpperCase() === 'PROCESSING';
+    if (activeFilter === 'Pending') {
+      return sale.status?.toUpperCase() === 'PENDING';
     }
     if (activeFilter === 'Refunded') {
       return sale.status?.toUpperCase() === 'REFUNDED';
@@ -101,7 +101,7 @@ export default function Sales() {
       invoiceNumber: `SALE-${Date.now().toString().slice(-6)}`,
       saleDate: new Date().toISOString().split('T')[0],
       status: 'COMPLETED',
-      paymentMethod: 'Cash',
+      paymentMethod: 'CASH',
       tax: '0',
       discount: '0',
       notes: '',
@@ -127,7 +127,7 @@ export default function Sales() {
       invoiceNumber: sale.invoiceNumber || '',
       saleDate: sale.saleDate ? new Date(sale.saleDate).toISOString().split('T')[0] : '',
       status: sale.status || 'COMPLETED',
-      paymentMethod: sale.paymentMethod || 'Cash',
+      paymentMethod: sale.paymentMethod || 'CASH',
       tax: sale.tax !== undefined ? String(sale.tax) : '0',
       discount: sale.discount !== undefined ? String(sale.discount) : '0',
       notes: sale.notes || '',
@@ -341,7 +341,7 @@ export default function Sales() {
 
       <Toolbar
         searchPlaceholder="Search sales..."
-        filters={['Completed', 'Processing', 'Refunded']}
+        filters={['Completed', 'Pending', 'Refunded']}
         searchValue={searchValue}
         onSearchChange={(val) => {
           setSearchValue(val);
@@ -484,7 +484,7 @@ export default function Sales() {
                         required
                       >
                         <option value="COMPLETED">Completed</option>
-                        <option value="PROCESSING">Processing</option>
+                        <option value="PENDING">Pending</option>
                         <option value="REFUNDED">Refunded</option>
                       </select>
                     </div>
@@ -497,10 +497,9 @@ export default function Sales() {
                       value={formData.paymentMethod}
                       onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                     >
-                      <option value="Cash">Cash</option>
-                      <option value="Card">Card</option>
-                      <option value="Bank Transfer">Bank Transfer</option>
-                      <option value="Cheque">Cheque</option>
+                      <option value="CASH">Cash</option>
+                      <option value="CARD">Card</option>
+                      <option value="BANK_TRANSFER">Bank Transfer</option>
                     </select>
                   </div>
 
@@ -722,9 +721,9 @@ export default function Sales() {
                   <label style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Customer Name</label>
                   <strong>{customerById[selectedSale.customerId]?.fullName || `Customer #${selectedSale.customerId || '-'}`}</strong>
                 </div>
-                <div>
+                 <div>
                   <label style={{ display: 'block', fontSize: '11px', color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', marginBottom: '4px' }}>Payment Method</label>
-                  <strong>{selectedSale.paymentMethod || 'Cash'}</strong>
+                  <strong>{status(selectedSale.paymentMethod)}</strong>
                 </div>
               </div>
 
