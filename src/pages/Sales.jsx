@@ -355,7 +355,7 @@ export default function Sales() {
       </section>
 
       <ChartCard title="Sales Analytics" subtitle="Sales totals by month">
-        <AreaChart data={salesTrend.values} />
+        <AreaChart labels={salesTrend.labels} values={salesTrend.raw} />
       </ChartCard>
 
       <Toolbar
