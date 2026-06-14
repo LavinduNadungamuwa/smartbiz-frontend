@@ -1,7 +1,10 @@
 export default function AreaChart({ labels = [], values = [], data = [] }) {
   const chartValues = values.length ? values : data;
   const n = Math.max(chartValues.length, 1);
-  const max = Math.max(...chartValues, 1);
+
+  // Calculate max to determine clean ceiling in intervals of 5000
+  const step = 2500;
+  const chartMax = Math.ceil(Math.max(...chartValues, 1) / step) * step;
 
   // Chart drawing area inside SVG (stretch to fill full width, leave vertical bounds)
   const x0 = 0;
@@ -11,24 +14,23 @@ export default function AreaChart({ labels = [], values = [], data = [] }) {
   const width = x1 - x0; // 100
   const height = y1 - y0; // 70
 
-  // Compute points for polyline / polygon
+  // Compute points for polyline / polygon relative to chartMax
   const points = chartValues.map((v, i) => {
     const x = x0 + (n === 1 ? 0.5 * width : (i / (n - 1)) * width);
-    const y = y0 + (1 - (v / max)) * height;
+    const y = y0 + (1 - (v / chartMax)) * height;
     return `${x},${y}`;
   }).join(' ');
 
   // Polygon includes baseline to close area
   const polygonPoints = ` ${x0},${y1} ${points} ${x1},${y1} `;
 
-  // Y-axis ticks (4 ticks + 0)
-  const ticks = 4;
-  const tickRows = Array.from({ length: ticks + 1 }, (_, i) => {
-    const t = i / ticks;
-    const y = y0 + (1 - t) * height;
-    const value = Math.round(t * max);
-    return { y, value };
-  }).reverse(); // highest first for nicer ordering
+  // Y-axis ticks in intervals of 5000
+  const tickRows = [];
+  for (let val = 0; val <= chartMax; val += step) {
+    const y = y0 + (1 - (val / chartMax)) * height;
+    tickRows.push({ y, value: val });
+  }
+  tickRows.reverse(); // highest first for nicer ordering
 
   // Currency formatter - format as USD currency (no decimal places)
   const currencyFmt = new Intl.NumberFormat('en-US', {
@@ -38,7 +40,7 @@ export default function AreaChart({ labels = [], values = [], data = [] }) {
   });
 
   return (
-    <div className="chart area-chart" style={{ position: 'relative', paddingLeft: '60px', paddingRight: '20px' }}>
+    <div className="chart area-chart" style={{ position: 'relative', paddingLeft: '60px', paddingRight: '15px' }}>
       {/* HTML container for Y-axis labels positioned absolute to avoid stretching */}
       <div style={{
         position: 'absolute',
@@ -75,10 +77,6 @@ export default function AreaChart({ labels = [], values = [], data = [] }) {
           </g>
         ))}
 
-        {/* Solid Axis lines to make margins clear */}
-        <line x1={x0} y1={y1} x2={x1} y2={y1} stroke="var(--border)" strokeWidth="0.5" />
-        <line x1={x0} y1={y0} x2={x0} y2={y1} stroke="var(--border)" strokeWidth="0.5" />
-
         {/* Area */}
         <polygon points={polygonPoints} fill="rgba(59,130,246,0.12)" stroke="none" />
         <polyline points={points} fill="none" stroke="var(--blue)" strokeWidth="0.6" strokeLinejoin="round" strokeLinecap="round" />
@@ -94,27 +92,13 @@ export default function AreaChart({ labels = [], values = [], data = [] }) {
         })}
       </svg>
 
-      {/* X labels rendered below SVG with absolute positioning for perfect alignment */}
-      <div style={{ position: 'relative', height: '20px', marginTop: '8px' }}>
-        {labels.map((lab, i) => {
-          const pct = n === 1 ? 50 : (i / (n - 1)) * 100;
-          const transform = i === 0 ? 'none' : i === labels.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)';
-          return (
-            <div
-              key={i}
-              style={{
-                position: 'absolute',
-                left: `${pct}%`,
-                transform: transform,
-                fontSize: '11px',
-                color: 'var(--muted)',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {lab}
-            </div>
-          );
-        })}
+      {/* X labels rendered below SVG for readability */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '4px', marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>
+        {labels.map((lab, i) => (
+          <div key={i} style={{ flex: 1, textAlign: i === 0 ? 'left' : i === labels.length - 1 ? 'right' : 'center', minWidth: 0, paddingLeft: i === 0 ? '4px' : 0, paddingRight: i === labels.length - 1 ? '4px' : 0 }}>
+            {lab}
+          </div>
+        ))}
       </div>
 
       {/* Axis titles */}
