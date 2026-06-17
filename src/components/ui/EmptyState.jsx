@@ -1,6 +1,6 @@
 import Button from './Button';
 
-export default function EmptyState({ title, description, action }) {
+export default function EmptyState({ title, description, action, onAction }) {
   return (
     <div className="empty-state">
       <div className="empty-illustration">
@@ -10,7 +10,7 @@ export default function EmptyState({ title, description, action }) {
       </div>
       <h3>{title}</h3>
       <p>{description}</p>
-      <Button icon="plus">{action}</Button>
+      <Button icon="plus" onClick={onAction}>{action}</Button>
     </div>
   );
 }

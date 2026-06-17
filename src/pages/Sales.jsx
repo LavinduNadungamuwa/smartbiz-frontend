@@ -117,32 +117,60 @@ export default function Sales() {
     setViewSaleItems([]);
   };
 
-  const handleEdit = (index) => {
+  const handleEdit = async (index) => {
     const sale = paginatedSales[index];
     if (!sale) return;
-    setSelectedSale(sale);
-    const saleItems = sale.items || sale.saleItems || [];
-    setFormData({
-      customerId: sale.customerId !== undefined ? String(sale.customerId) : '',
-      invoiceNumber: sale.invoiceNumber || '',
-      saleDate: sale.saleDate ? new Date(sale.saleDate).toISOString().split('T')[0] : '',
-      status: sale.status || 'COMPLETED',
-      paymentMethod: sale.paymentMethod || 'CASH',
-      discount: sale.discount !== undefined ? String(sale.discount) : '0',
-      notes: sale.notes || '',
-      // Include productName so edit modal can show read-only product labels
-      items: saleItems.map((item) => ({
-        productId: item.productId !== undefined ? String(item.productId) : '',
-        productName: item.productName || item.product?.productName || productById[item.productId]?.productName || `Product #${item.productId}`,
-        quantity: item.quantity || 1,
-        unitPrice: item.unitPrice !== undefined ? String(item.unitPrice) : '',
-      })),
-    });
-    setFormErrors({});
-    setSubmitError('');
-    setModalMode('edit');
-  };
 
+    try {
+      const [saleRes, itemsRes] = await Promise.all([
+        getSaleById(sale.id),
+        getSaleItems(),
+      ]);
+
+      const fullSale = saleRes.data;
+      const allItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+      const saleItems = allItems.filter(
+        (item) =>
+          item.saleId === sale.id ||
+          item.sale?.id === sale.id ||
+          item.sale_id === sale.id
+      );
+
+      setSelectedSale(fullSale);
+
+      setFormData({
+        customerId: fullSale.customerId !== undefined ? String(fullSale.customerId) : '',
+        invoiceNumber: String(fullSale.invoiceNumber || `SALE-${fullSale.id}`), // Cast to safe String
+        saleDate: fullSale.saleDate ? new Date(fullSale.saleDate).toISOString().split('T')[0] : '',
+        status: fullSale.status || 'COMPLETED',
+        paymentMethod: fullSale.paymentMethod || 'CASH',
+        discount: fullSale.discount !== undefined ? String(fullSale.discount) : '0',
+        notes: fullSale.notes || '',
+
+        items: saleItems.map((item) => {
+          const productId = item.productId ?? item.product_id ?? item.product?.id ?? item.product?.productId;
+          const quantity = item.quantity ?? item.qty ?? 1;
+          const unitPrice = item.unitPrice ?? item.unit_price ?? item.price ?? '';
+
+          return {
+            id: item.id, // <-- CRITICAL: Maintain row entity mapping
+            productId: productId !== undefined ? String(productId) : '',
+            productName: item.productName || item.product?.productName || item.product?.name || productById[productId]?.productName || `Product #${productId}`,
+            quantity: quantity,
+            unitPrice: unitPrice !== undefined ? String(unitPrice) : '',
+          };
+        }),
+      });
+
+      setFormErrors({});
+      setSubmitError('');
+      setModalMode('edit');
+
+    } catch (err) {
+      console.error("Error fetching sale details for edit:", err);
+      alert("Could not load sale items. Please try again.");
+    }
+  };
   const handleView = async (index) => {
     const sale = paginatedSales[index];
     if (!sale) return;
@@ -195,17 +223,21 @@ export default function Sales() {
 
   // Dynamic Item Row Handlers
   const handleItemChange = (index, field, value) => {
-    const newItems = [...formData.items];
-    newItems[index][field] = value;
+    // High-level declarative update preventing object mutation
+    const newItems = formData.items.map((item, i) => {
+      if (i === index) {
+        const updatedItem = { ...item, [field]: value };
 
-    if (field === 'productId') {
-      const prod = productById[value];
-      if (prod) {
-        newItems[index].unitPrice = String(prod.unitPrice || '');
-      } else {
-        newItems[index].unitPrice = '';
+        // If the product is changed, automatically pull the database base price
+        if (field === 'productId') {
+          const prod = productById[value];
+          updatedItem.unitPrice = prod ? String(prod.unitPrice || '') : '';
+          updatedItem.productName = prod ? prod.productName : '';
+        }
+        return updatedItem;
       }
-    }
+      return item;
+    });
 
     setFormData({ ...formData, items: newItems });
   };
@@ -231,11 +263,15 @@ export default function Sales() {
 
   const calculatedTotal = calculatedSubtotal - Number(formData.discount || 0);
 
-  // Form Validation
+
   const validateForm = () => {
     const errors = {};
     if (!formData.customerId) errors.customerId = 'Customer is required';
-    if (!formData.invoiceNumber.trim()) errors.invoiceNumber = 'Invoice Number is required';
+
+    if (modalMode === 'create' && (!formData.invoiceNumber || !formData.invoiceNumber.trim())) {
+      errors.invoiceNumber = 'Invoice Number is required';
+    }
+
     if (!formData.saleDate) errors.saleDate = 'Sale Date is required';
 
     const itemsErrors = [];
@@ -284,37 +320,48 @@ export default function Sales() {
     setSubmitLoading(true);
     setSubmitError('');
 
-    const formattedItems = formData.items.map((item) => ({
-      productId: parseInt(item.productId, 10),
-      quantity: parseInt(item.quantity, 10),
-      unitPrice: parseFloat(item.unitPrice),
-      totalPrice: parseInt(item.quantity, 10) * parseFloat(item.unitPrice),
-    }));
-
-    const payload = {
-      customerId: parseInt(formData.customerId, 10),
-      invoiceNumber: formData.invoiceNumber.trim(),
-      saleDate: formData.saleDate,
-      status: formData.status.toUpperCase(),
-      paymentMethod: formData.paymentMethod,
-      subtotal: calculatedSubtotal,
-      tax: 0,
-      discount: parseFloat(formData.discount),
-      totalAmount: calculatedTotal,
-      notes: formData.notes.trim(),
-      items: formattedItems,
-      saleItems: formattedItems, // Support both potential fields in request
-    };
-
     try {
+      // Inside your handleSubmit function
+      const formattedItems = formData.items.map((item) => {
+        const qty = parseInt(item.quantity, 10);
+        const price = parseFloat(item.unitPrice);
+
+        return {
+          id: item.id || undefined,
+          productId: parseInt(item.productId, 10),
+          quantity: parseInt(item.quantity, 10),
+          unitPrice: parseFloat(item.unitPrice),
+          totalPrice: parseInt(item.quantity, 10) * parseFloat(item.unitPrice),
+          product_id: parseInt(item.productId, 10),
+          subtotal: qty * price,
+        };
+      });
+
+      const payload = {
+        customerId: parseInt(formData.customerId, 10),
+        invoiceNumber: String(formData.invoiceNumber || '').trim(), // Double protected string conversion
+        saleDate: formData.saleDate,
+        status: String(formData.status || 'COMPLETED').toUpperCase(),
+        paymentMethod: formData.paymentMethod,
+        subtotal: calculatedSubtotal,
+        tax: 0,
+        discount: parseFloat(formData.discount) || 0,
+        totalAmount: calculatedTotal,
+        notes: String(formData.notes || '').trim(),
+        items: formattedItems,
+        saleItems: formattedItems, // Defensive alignment matching various ORM structures
+      };
+
       if (modalMode === 'create') {
         await createSale(payload);
       } else if (modalMode === 'edit') {
         await updateSale(selectedSale.id, payload);
       }
+
       reload();
       closeModal();
     } catch (err) {
+      console.error("Submission pipeline failed:", err);
       setSubmitError(
         err.response?.data?.message || err.message || 'Failed to save sale record. Please try again.'
       );
