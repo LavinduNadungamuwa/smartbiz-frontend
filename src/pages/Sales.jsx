@@ -281,7 +281,7 @@ export default function Sales() {
       formData.items.forEach((item, index) => {
         const itemErr = {};
         // Only require product selection when creating a sale. In edit mode we show existing products and do not ask user to re-select them.
-        if (modalMode === 'create' && !item.productId) itemErr.productId = 'Required';
+        if (!item.productId) itemErr.productId = 'Required';
 
         const qty = Number(item.quantity);
         if (isNaN(qty) || qty <= 0 || !Number.isInteger(qty)) {
@@ -597,10 +597,7 @@ export default function Sales() {
                   <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <h4 style={{ margin: 0, fontWeight: 700 }}>Products List *</h4>
-                      {/* Disable adding new products when editing an existing sale; editing should only adjust quantities/prices of existing items */}
-                      {modalMode === 'create' && (
-                        <Button variant="ghost" icon="plus" onClick={addItemRow}>Add Product</Button>
-                      )}
+                      <Button variant="ghost" icon="plus" onClick={addItemRow}>Add Product</Button>
                     </div>
                     {formErrors.itemsGlobal && (
                       <div className="error-msg" style={{ marginBottom: '12px', display: 'block' }}>{formErrors.itemsGlobal}</div>
@@ -611,31 +608,34 @@ export default function Sales() {
                         const itemErr = formErrors.items?.[idx] || {};
                         return (
                           <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', background: 'var(--app-bg)', padding: '12px', borderRadius: '10px' }}>
-                            {/* Product: select when creating, read-only label when editing */}
-                            {modalMode === 'create' ? (
-                              <div style={{ flex: 3 }} className="form-field">
-                                <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Product</label>
-                                <select
-                                  className={itemErr.productId ? 'error' : ''}
-                                  value={item.productId}
-                                  onChange={(e) => handleItemChange(idx, 'productId', e.target.value)}
-                                  required
-                                >
-                                  <option value="">Select Product</option>
-                                  {(data.products || []).map((product) => (
-                                    <option key={product.id} value={product.id}>
-                                      {product.productName} ({currency(product.unitPrice)})
-                                    </option>
-                                  ))}
-                                </select>
-                                {itemErr.productId && <span className="error-msg">{itemErr.productId}</span>}
-                              </div>
-                            ) : (
-                              <div style={{ flex: 3 }} className="form-field">
-                                <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Product</label>
-                                <div style={{ padding: '10px 12px', borderRadius: '6px', background: 'var(--app-bg)', fontWeight: 700 }}>{item.productName || productById[item.productId]?.productName || `Product #${item.productId}`}</div>
-                              </div>
-                            )}
+                            <div style={{ flex: 3 }} className="form-field">
+                              <label style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                                Product
+                              </label>
+
+                              <select
+                                className={itemErr.productId ? 'error' : ''}
+                                value={item.productId || ''}
+                                onChange={(e) =>
+                                  handleItemChange(idx, 'productId', e.target.value)
+                                }
+                                required
+                              >
+                                <option value="">Select Product</option>
+
+                                {(data.products || []).map((product) => (
+                                  <option key={product.id} value={product.id}>
+                                    {product.productName} ({currency(product.unitPrice)})
+                                  </option>
+                                ))}
+                              </select>
+
+                              {itemErr.productId && (
+                                <span className="error-msg">
+                                  {itemErr.productId}
+                                </span>
+                              )}
+                            </div>
 
                             <div style={{ flex: 1 }} className="form-field">
                               <label style={{ fontSize: '11px', color: 'var(--muted)' }}>Qty</label>
