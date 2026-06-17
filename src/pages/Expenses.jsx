@@ -52,6 +52,11 @@ export default function Expenses() {
   }, {});
   const largestCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
 
+  const pieChartData = Object.entries(categoryTotals).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
   // Filter & Search Logic
   const filteredExpenses = expensesList.filter((expense) => {
     // Search matching
@@ -241,7 +246,7 @@ export default function Expenses() {
       </section>
       <section className="dashboard-grid two">
         <ChartCard title="Expense Breakdown" subtitle="Spend distribution by category">
-          <PieChart />
+          <PieChart data={pieChartData} />
         </ChartCard>
         <section className="card">
           <div className="card-header">
