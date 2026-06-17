@@ -49,7 +49,7 @@ function isStatusCell(value) {
     'Low Stock',
     'Out of Stock',
     'Completed',
-    'Processing',
+    'Pending',
     'Refunded',
   ].includes(value);
 }
