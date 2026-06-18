@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { jsPDF } from 'jspdf';
 import Button from '../components/ui/Button';
 import DataTable from '../components/ui/DataTable';
 import EmptyState from '../components/ui/EmptyState';
@@ -53,27 +54,56 @@ export default function Invoices() {
     setSaleItems([]);
   };
 
-  const handlePrint = () => {
-    const inv = selectedInvoice;
-    const sale = saleDetails;
+  /* ── shared helper: fetch sale + items for any invoice row ── */
+  const fetchInvoiceData = async (index) => {
+    const invoice = data.invoices?.[index];
+    if (!invoice) return null;
     const customerById = indexById(data.customers || []);
-    const productById = indexById(data.products || []);
-    const customerName = sale
-      ? customerById[sale.customerId]?.fullName || `Customer #${sale.customerId}`
-      : '—';
-
-    const viewItems = saleItems.map((item) => {
+    const productById  = indexById(data.products  || []);
+    let sale  = null;
+    let items = [];
+    if (invoice.saleId) {
+      try {
+        const [saleRes, itemsRes] = await Promise.all([
+          getSaleById(invoice.saleId),
+          getSaleItems(),
+        ]);
+        sale  = saleRes.data;
+        const all = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+        items = all.filter(
+          (it) =>
+            it.saleId === invoice.saleId ||
+            it.sale?.id === invoice.saleId ||
+            it.sale_id === invoice.saleId
+        );
+      } catch { /* graceful */ }
+    }
+    const normaliseItems = (raw) => raw.map((item) => {
       const productId = item.productId ?? item.product_id ?? item.product?.id ?? item.product?.productId;
       const productName =
-        item.productName || item.product?.productName || item.product?.name || productById[productId]?.productName || `Product #${productId}`;
-      const quantity = Number(item.quantity ?? item.qty ?? 0);
-      const unitPrice = Number(item.unitPrice ?? item.unit_price ?? item.price ?? 0);
+        item.productName || item.product?.productName || item.product?.name ||
+        productById[productId]?.productName || `Product #${productId}`;
+      const quantity   = Number(item.quantity  ?? item.qty        ?? 0);
+      const unitPrice  = Number(item.unitPrice ?? item.unit_price ?? item.price ?? 0);
       const totalPrice = Number(item.totalPrice ?? item.total_price ?? item.total ?? quantity * unitPrice);
       return { productName, quantity, unitPrice, totalPrice };
     });
+    return { invoice, sale, items: normaliseItems(items), customerById, productById };
+  };
 
-    const itemsHtml = viewItems.length
-      ? viewItems.map(it => `
+  /* ── PRINT (table row action) ── */
+  const handlePrintByIndex = async (index) => {
+    const d = await fetchInvoiceData(index);
+    if (!d) return;
+    const { invoice: inv, sale, items, customerById } = d;
+    const customerName  = sale ? customerById[sale.customerId]?.fullName || `Customer #${sale.customerId}` : '—';
+    const paymentMethod = sale ? status(sale.paymentMethod) : '—';
+    const subtotal = sale?.subtotal ?? inv.totalAmount;
+    const discount = sale?.discount ?? 0;
+    const total    = inv.totalAmount ?? sale?.totalAmount;
+
+    const itemsHtml = items.length
+      ? items.map(it => `
           <tr>
             <td style="padding:8px 10px">${it.productName}</td>
             <td style="padding:8px 10px;text-align:center">${it.quantity}</td>
@@ -82,32 +112,26 @@ export default function Invoices() {
           </tr>`).join('')
       : `<tr><td colspan="4" style="padding:10px;color:#888">No line items available.</td></tr>`;
 
-    const subtotal = sale?.subtotal ?? inv.totalAmount;
-    const discount = sale?.discount ?? 0;
-    const total = inv.totalAmount ?? sale?.totalAmount;
-    const paymentMethod = sale ? status(sale.paymentMethod) : '—';
-
     const printContent = `
-      <!DOCTYPE html>
-      <html>
+      <!DOCTYPE html><html>
       <head>
         <title>Invoice ${inv.invoiceNumber || `INV-${inv.id}`}</title>
         <style>
           body { font-family: Inter, system-ui, sans-serif; color: #111; padding: 40px; font-size: 14px; }
           h1 { font-size: 22px; margin: 0 0 4px; }
           .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
-          .badge { display: inline-block; padding: 4px 10px; border-radius: 10px; font-size: 12px; font-weight: 700;
-                   background: ${inv.status === 'PAID' ? '#e0f0ff' : '#fff3e0'}; color: ${inv.status === 'PAID' ? '#0070f3' : '#e07a00'}; }
-          .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-          label { font-size: 11px; color: #888; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 3px; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-          th { text-align: left; padding: 8px 10px; font-size: 11px; color: #888; text-transform: uppercase; border-bottom: 2px solid #eee; }
-          th:last-child, td:last-child { text-align: right; }
-          th:nth-child(2), td:nth-child(2) { text-align: center; }
-          td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
-          tfoot td { font-size: 13px; }
-          .total-row td { font-size: 15px; font-weight: 800; border-top: 2px solid #eee; }
-          .footer { margin-top: 32px; font-size: 12px; color: #aaa; text-align: center; }
+          .badge { display:inline-block; padding:4px 10px; border-radius:10px; font-size:12px; font-weight:700;
+                   background:${inv.status==='PAID'?'#e0f0ff':'#fff3e0'}; color:${inv.status==='PAID'?'#0070f3':'#e07a00'}; }
+          .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px; }
+          label { font-size:11px; color:#888; text-transform:uppercase; font-weight:600; display:block; margin-bottom:3px; }
+          table { width:100%; border-collapse:collapse; margin-bottom:16px; }
+          th { text-align:left; padding:8px 10px; font-size:11px; color:#888; text-transform:uppercase; border-bottom:2px solid #eee; }
+          th:last-child, td:last-child { text-align:right; }
+          th:nth-child(2), td:nth-child(2) { text-align:center; }
+          td { padding:8px 10px; border-bottom:1px solid #f0f0f0; }
+          tfoot td { font-size:13px; }
+          .total-row td { font-size:15px; font-weight:800; border-top:2px solid #eee; }
+          .footer { margin-top:32px; font-size:12px; color:#aaa; text-align:center; }
         </style>
       </head>
       <body>
@@ -123,36 +147,133 @@ export default function Invoices() {
           <div><label>Payment Method</label><strong>${paymentMethod}</strong></div>
         </div>
         <table>
-          <thead>
-            <tr>
-              <th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
           <tbody>${itemsHtml}</tbody>
           <tfoot>
-            <tr>
-              <td colspan="3" style="text-align:right;color:#888">Subtotal:</td>
-              <td style="text-align:right">${currency(subtotal)}</td>
-            </tr>
-            <tr>
-              <td colspan="3" style="text-align:right;color:#e07a00">Discount:</td>
-              <td style="text-align:right;color:#e07a00">− ${currency(discount)}</td>
-            </tr>
-            <tr class="total-row">
-              <td colspan="3" style="text-align:right">Total Amount:</td>
-              <td style="text-align:right;color:#0070f3">${currency(total)}</td>
-            </tr>
+            <tr><td colspan="3" style="text-align:right;color:#888">Subtotal:</td><td style="text-align:right">${currency(subtotal)}</td></tr>
+            <tr><td colspan="3" style="text-align:right;color:#e07a00">Discount:</td><td style="text-align:right;color:#e07a00">− ${currency(discount)}</td></tr>
+            <tr class="total-row"><td colspan="3" style="text-align:right">Total Amount:</td><td style="text-align:right;color:#0070f3">${currency(total)}</td></tr>
           </tfoot>
         </table>
         <div class="footer">Generated by SmartBiz &bull; ${new Date().toLocaleDateString()}</div>
-      </body>
-      </html>`;
+      </body></html>`;
 
     const win = window.open('', '_blank', 'width=800,height=700');
     win.document.write(printContent);
     win.document.close();
     win.focus();
     win.print();
+  };
+
+  /* ── DOWNLOAD PDF (table row action) ── */
+  const handleDownloadPDFByIndex = async (index) => {
+    const d = await fetchInvoiceData(index);
+    if (!d) return;
+    const { invoice: inv, sale, items: pdfItems, customerById } = d;
+
+    const customerName  = sale ? customerById[sale.customerId]?.fullName || `Customer #${sale.customerId}` : '—';
+    const paymentMethod = sale ? status(sale.paymentMethod) : '—';
+    const subtotal = sale?.subtotal ?? inv.totalAmount;
+    const discount = sale?.discount ?? 0;
+    const total    = inv.totalAmount ?? sale?.totalAmount;
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const W  = doc.internal.pageSize.getWidth();
+    const H  = doc.internal.pageSize.getHeight();
+    const LM = 20;
+    const RM = W - 20;
+    let y = 22;
+
+    const setColour   = (r, g, b) => doc.setTextColor(r, g, b);
+    const resetColour = () => setColour(17, 17, 17);
+    const muted       = () => setColour(120, 120, 120);
+
+    /* Header band */
+    doc.setFillColor(15, 23, 42);
+    doc.rect(0, 0, W, 40, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(255, 255, 255);
+    doc.text(inv.invoiceNumber || `INV-${inv.id}`, LM, y);
+    doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(180, 190, 210);
+    doc.text(`Issue: ${date(inv.issueDate)}   \u2022   Due: ${date(inv.dueDate)}`, LM, y + 8);
+
+    const isPaid = inv.status === 'PAID';
+    const pillW = 28, pillX = RM - 28, pillY = y - 6;
+    doc.setFillColor(isPaid ? 0 : 255, isPaid ? 186 : 167, isPaid ? 124 : 38);
+    doc.roundedRect(pillX, pillY, pillW, 8, 3, 3, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8);
+    doc.setTextColor(isPaid ? 0 : 130, isPaid ? 70 : 60, isPaid ? 20 : 0);
+    doc.text(status(inv.status), pillX + pillW / 2, pillY + 5.2, { align: 'center' });
+
+    y = 50;
+
+    /* Customer / Payment */
+    const labelStyle = () => { doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); muted(); };
+    const valueStyle = () => { doc.setFont('helvetica', 'bold'); doc.setFontSize(11); resetColour(); };
+    labelStyle(); doc.text('CUSTOMER NAME', LM, y);
+    labelStyle(); doc.text('PAYMENT METHOD', W / 2 + 5, y);
+    y += 5;
+    valueStyle(); doc.text(customerName, LM, y);
+    valueStyle(); doc.text(paymentMethod, W / 2 + 5, y);
+    y += 10;
+    doc.setDrawColor(220, 225, 235); doc.setLineWidth(0.3); doc.line(LM, y, RM, y);
+    y += 8;
+
+    /* Products table */
+    const colProduct = LM, colQty = W * 0.60, colUnit = W * 0.76, colTotal = RM;
+    doc.setFillColor(245, 247, 250);
+    doc.rect(LM, y - 4.5, RM - LM, 8, 'F');
+    labelStyle();
+    doc.text('PRODUCT', colProduct, y);
+    doc.text('QTY', colQty, y, { align: 'center' });
+    doc.text('UNIT PRICE', colUnit, y, { align: 'right' });
+    doc.text('TOTAL', colTotal, y, { align: 'right' });
+    y += 5;
+    doc.setDrawColor(210, 215, 225); doc.setLineWidth(0.4); doc.line(LM, y, RM, y);
+    y += 5;
+    doc.setLineWidth(0.2);
+
+    if (pdfItems.length === 0) {
+      muted(); doc.setFont('helvetica', 'italic'); doc.setFontSize(10);
+      doc.text('No line items available.', LM, y);
+      y += 8;
+    } else {
+      pdfItems.forEach((item, i) => {
+        if (i % 2 === 0) { doc.setFillColor(252, 253, 255); doc.rect(LM, y - 4, RM - LM, 8, 'F'); }
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(10); resetColour();
+        doc.text(item.productName, colProduct, y);
+        doc.setFont('helvetica', 'normal');
+        doc.text(String(item.quantity), colQty, y, { align: 'center' });
+        doc.text(currency(item.unitPrice), colUnit, y, { align: 'right' });
+        doc.setFont('helvetica', 'bold');
+        doc.text(currency(item.totalPrice), colTotal, y, { align: 'right' });
+        y += 8;
+        doc.setDrawColor(230, 234, 240); doc.line(LM, y - 2, RM, y - 2);
+      });
+    }
+    y += 6;
+
+    /* Totals */
+    const totX = W * 0.60;
+    doc.setDrawColor(210, 215, 225); doc.setLineWidth(0.3); doc.line(totX, y, RM, y); y += 7;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); muted();
+    doc.text('Subtotal', totX, y);
+    resetColour(); doc.setFont('helvetica', 'bold');
+    doc.text(currency(subtotal), RM, y, { align: 'right' }); y += 7;
+    doc.setFont('helvetica', 'normal'); setColour(200, 100, 0);
+    doc.text('Discount', totX, y);
+    doc.setFont('helvetica', 'bold'); setColour(200, 100, 0);
+    doc.text(`\u2212 ${currency(discount)}`, RM, y, { align: 'right' }); y += 5;
+    doc.setDrawColor(180, 185, 200); doc.setLineWidth(0.5); doc.line(totX, y, RM, y); y += 8;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(14); resetColour();
+    doc.text('Total Amount', totX, y);
+    setColour(0, 112, 243); doc.text(currency(total), RM, y, { align: 'right' });
+
+    /* Footer */
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); setColour(170, 175, 185);
+    doc.text(`Generated by SmartBiz  \u2022  ${new Date().toLocaleDateString()}`, W / 2, H - 12, { align: 'center' });
+    doc.setDrawColor(220, 225, 235); doc.setLineWidth(0.2); doc.line(LM, H - 17, RM, H - 17);
+
+    doc.save(`${inv.invoiceNumber || `INV-${inv.id}`}.pdf`);
   };
 
   if (loading) return <LoadingState message="Loading invoices..." />;
@@ -187,7 +308,7 @@ export default function Invoices() {
       <Toolbar searchPlaceholder="Search invoices..." filters={['Paid', 'Pending', 'Overdue']} />
       <section className="card">
         {rows.length ? (
-          <DataTable columns={['Invoice Number', 'Customer', 'Amount', 'Issue Date', 'Due Date', 'Status']} rows={rows} actions="invoice" onView={openView} />
+          <DataTable columns={['Invoice Number', 'Customer', 'Amount', 'Issue Date', 'Due Date', 'Status']} rows={rows} actions="invoice" onView={openView} onPrint={handlePrintByIndex} onDownloadPDF={handleDownloadPDFByIndex} />
         ) : (
           <EmptyState title="No invoices yet" description="Invoice records from the database will appear here." />
         )}
@@ -315,16 +436,7 @@ export default function Invoices() {
 
             {/* Footer */}
             <div className="modal-footer">
-              <Button variant="ghost" onClick={closeView}>Close</Button>
-              <Button variant="primary" onClick={handlePrint}>
-                {/* Printer icon */}
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                  <rect x="6" y="14" width="12" height="8"></rect>
-                </svg>
-                Print Invoice
-              </Button>
+              <Button variant="primary" onClick={closeView}>Close</Button>
             </div>
           </div>
         </div>

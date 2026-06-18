@@ -1,7 +1,7 @@
 import Button from './Button';
 import StatusBadge from './StatusBadge';
 
-export default function DataTable({ columns, rows, actions = false, onEdit, onDelete, onView }) {
+export default function DataTable({ columns, rows, actions = false, onEdit, onDelete, onView, onPrint, onDownloadPDF }) {
   return (
     <div className="table-wrap">
       <table className="data-table">
@@ -26,8 +26,8 @@ export default function DataTable({ columns, rows, actions = false, onEdit, onDe
                   <div className="row-actions">
                     <Button variant="ghost" icon="view" onClick={() => onView?.(index)}>View</Button>
                     {actions !== 'invoice' && <Button variant="ghost" icon="edit" onClick={() => onEdit?.(index)}>Edit</Button>}
-                    {actions === 'invoice' && <Button variant="ghost" icon="download">PDF</Button>}
-                    {actions === 'invoice' && <Button variant="ghost" icon="print">Print</Button>}
+                    {actions === 'invoice' && <Button variant="ghost" icon="download" onClick={() => onDownloadPDF?.(index)}>PDF</Button>}
+                    {actions === 'invoice' && <Button variant="ghost" icon="print" onClick={() => onPrint?.(index)}>Print</Button>}
                     {actions !== 'invoice' && <Button variant="danger" icon="trash" onClick={() => onDelete?.(index)}>Delete</Button>}
                   </div>
                 </td>
