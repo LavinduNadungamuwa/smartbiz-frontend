@@ -202,8 +202,13 @@ export default function Invoices() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="modal-header">
-              <h3>Invoice Details</h3>
+            <div className="modal-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3>Invoice Details</h3>
+                <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>
+                  Sale ID: {selectedInvoice.saleId ?? '—'}
+                </div>
+              </div>
               <button className="modal-close" onClick={closeView} aria-label="Close">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>

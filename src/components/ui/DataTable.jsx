@@ -25,7 +25,7 @@ export default function DataTable({ columns, rows, actions = false, onEdit, onDe
                 <td>
                   <div className="row-actions">
                     <Button variant="ghost" icon="view" onClick={() => onView?.(index)}>View</Button>
-                    <Button variant="ghost" icon="edit" onClick={() => onEdit?.(index)}>Edit</Button>
+                    {actions !== 'invoice' && <Button variant="ghost" icon="edit" onClick={() => onEdit?.(index)}>Edit</Button>}
                     {actions === 'invoice' && <Button variant="ghost" icon="download">PDF</Button>}
                     {actions === 'invoice' && <Button variant="ghost" icon="print">Print</Button>}
                     {actions !== 'invoice' && <Button variant="danger" icon="trash" onClick={() => onDelete?.(index)}>Delete</Button>}
