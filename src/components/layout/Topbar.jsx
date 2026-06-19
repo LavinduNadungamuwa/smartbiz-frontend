@@ -1,9 +1,11 @@
 import Icon from '../ui/Icon';
 import Toggle from '../ui/Toggle';
 import { useEffect, useState } from 'react';
+import useAuth from '../../store/useAuth';
 
 export default function Topbar({ onMenuClick }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('sb_theme') || 'light');
+  const { user: authUser } = useAuth();
 
   useEffect(() => {
     if (theme === 'dark') {
@@ -14,9 +16,11 @@ export default function Topbar({ onMenuClick }) {
     localStorage.setItem('sb_theme', theme);
   }, [theme]);
 
-  const user = readSavedUser();
+  // Use reactive context user; fall back to localStorage for page-refresh safety
+  const user = authUser || readSavedUser();
   const email = user.sub || user.email || 'smartbiz@account.com';
   const initials = email.slice(0, 2).toUpperCase();
+  const businessName = user.businessName || 'SmartBiz Business';
 
   return (
     <header className="topbar">
@@ -37,7 +41,7 @@ export default function Topbar({ onMenuClick }) {
           <span className="notification-dot" />
         </button>
         <button className="business-switcher" type="button">
-          {user.businessId ? `Business #${user.businessId}` : 'SmartBiz Business'}
+          {businessName}
           <span>v</span>
         </button>
         <Toggle

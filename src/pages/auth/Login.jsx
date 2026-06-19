@@ -40,10 +40,15 @@ export default function Login() {
     try {
       const res = await login(form);
 
-      if (!res.data.token) {
-        setError(res.data.message || 'Invalid credentials');
-        return;
-      }
+      localStorage.setItem(
+        'sb_user',
+        JSON.stringify({
+          userId: res.data.userId,
+          email: res.data.email,
+          businessId: res.data.businessId,
+          businessName: res.data.businessName,
+        })
+      );
 
       const success = saveAuth(res.data.token);
 

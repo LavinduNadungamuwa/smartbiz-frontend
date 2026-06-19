@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
     }
   });
 
-  const saveAuth = (tokenStr) => {
+  const saveAuth = (tokenStr, extraFields = {}) => {
 
   // Prevent fake logins
   if (!tokenStr) {
@@ -46,12 +46,21 @@ export function AuthProvider({ children }) {
 
   const role = payload?.roles?.[0] || payload?.role || '';
 
+  // Merge extra fields (businessName, businessId, etc.) that login already
+  // saved into sb_user before calling saveAuth — don't overwrite them.
+  let previousExtra = {};
+  try {
+    previousExtra = JSON.parse(localStorage.getItem('sb_user') || '{}');
+  } catch { /* ignore */ }
+
+  const merged = { ...previousExtra, ...extraFields, ...payload };
+
   localStorage.setItem('sb_token', tokenStr);
   localStorage.setItem('sb_role', role);
-  localStorage.setItem('sb_user', JSON.stringify(payload));
+  localStorage.setItem('sb_user', JSON.stringify(merged));
 
   setToken(tokenStr);
-  setUser(payload);
+  setUser(merged);
 
   return true;
 };
