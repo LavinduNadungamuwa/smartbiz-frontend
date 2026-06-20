@@ -593,28 +593,48 @@ input {
   margin-top: 10px;
 }
 
+/* ── Bar Chart ─────────────────────────────────────────────────────── */
+
+.bar-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .bar-chart {
   display: flex;
-  align-items: end;
-  gap: 13px;
-  height: 250px;
+  align-items: flex-end;
+  gap: 6px;
+  height: 210px;
   padding-top: 8px;
 }
 
 .bar-group {
   display: flex;
-  align-items: end;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   gap: 4px;
   flex: 1;
+  min-width: 0;
   height: 100%;
+}
+
+.bar-sticks {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  width: 100%;
   border-bottom: 1px solid var(--border);
 }
 
 .bar {
-  width: 10px;
-  min-height: 14px;
-  border-radius: 999px 999px 0 0;
+  width: 8px;
+  min-height: 4px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.4s ease;
 }
 
 .bar.revenue {
@@ -622,7 +642,45 @@ input {
 }
 
 .bar.expense {
-  background: #94a3b8;
+  background: var(--red);
+  opacity: 0.7;
+}
+
+.bar-label {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  padding-top: 4px;
+}
+
+.bar-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  padding: 0 2px;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-right: 4px;
+}
+
+.legend-dot.revenue {
+  background: var(--blue);
+}
+
+.legend-dot.expense {
+  background: var(--red);
+  opacity: 0.7;
 }
 
 .horizontal-bars {

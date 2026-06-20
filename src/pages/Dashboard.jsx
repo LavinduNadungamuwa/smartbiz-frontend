@@ -61,7 +61,7 @@ export default function Dashboard() {
           <LineChart data={revenue.values} labels={revenue.labels} />
         </ChartCard>
         <ChartCard title="Revenue vs Expenses" subtitle="Live sales and expense totals">
-          <BarChart revenue={revenue.values} expenses={expenseTrend.values} />
+          <BarChart revenue={revenue.raw} expenses={expenseTrend.raw} labels={revenue.labels} />
         </ChartCard>
         <ChartCard title="Sales Performance" subtitle="Sales trend over time">
           <AreaChart data={revenue.values} />

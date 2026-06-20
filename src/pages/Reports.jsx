@@ -262,7 +262,7 @@ export default function Reports() {
               <LineChart data={revenue.values} labels={revenue.labels} />
             </ChartCard>
             <ChartCard title="Revenue vs Expenses" subtitle="Comparison by month">
-              <BarChart revenue={revenue.values} expenses={expenses.values} />
+              <BarChart revenue={revenue.raw} expenses={expenses.raw} labels={revenue.labels} />
             </ChartCard>
           </section>
 
@@ -315,7 +315,7 @@ export default function Reports() {
               <LineChart data={revenue.values} labels={revenue.labels} />
             </ChartCard>
             <ChartCard title="Revenue vs Expenses" subtitle="Side-by-side monthly view">
-              <BarChart revenue={revenue.values} expenses={expenses.values} />
+              <BarChart revenue={revenue.raw} expenses={expenses.raw} labels={revenue.labels} />
             </ChartCard>
           </section>
 
@@ -372,7 +372,7 @@ export default function Reports() {
               <LineChart data={expenses.values} labels={expenses.labels} />
             </ChartCard>
             <ChartCard title="Revenue vs Expenses" subtitle="Comparison">
-              <BarChart revenue={revenue.values} expenses={expenses.values} />
+              <BarChart revenue={revenue.raw} expenses={expenses.raw} labels={revenue.labels} />
             </ChartCard>
           </section>
 
