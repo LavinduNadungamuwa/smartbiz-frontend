@@ -5,7 +5,7 @@ import { ErrorState, LoadingState } from '../components/ui/LoadState';
 import PageHeader from '../components/ui/PageHeader';
 import StatCard from '../components/ui/StatCard';
 import { useBusinessData } from '../api/resources';
-import { currency, date, lastMonthsSeries, number, status } from '../utils/formatters';
+import { currency, date, indexById, lastMonthsSeries, number, status } from '../utils/formatters';
 
 const REPORT_TYPES = [
   { key: 'Sales Report',     icon: '📈' },
@@ -86,6 +86,7 @@ export default function Reports() {
 
   const pendingInvoices = useMemo(() => data?.invoices?.filter(i => i.status === 'PENDING').length || 0, [data?.invoices]);
   const paidInvoices    = useMemo(() => data?.invoices?.filter(i => i.status === 'PAID').length    || 0, [data?.invoices]);
+  const customerById    = useMemo(() => indexById(data?.customers || []), [data?.customers]);
 
   // ── Early returns AFTER all hooks ─────────────────────────────────────────
   if (loading) return <LoadingState message="Loading reports..." />;
@@ -94,22 +95,29 @@ export default function Reports() {
   // ── Print helpers ─────────────────────────────────────────────────────────
 
   const handlePrintSales = () => {
-    const rows = filteredSales.map(s => `
+    const rows = filteredSales.map(s => {
+      const custName = customerById[s.customerId]?.fullName || `Customer #${s.customerId || '-'}`;
+      return `
       <tr>
-        <td>${s.saleId ?? s.id ?? '—'}</td>
+        <td>#${s.saleId ?? s.id ?? '—'}</td>
+        <td>${custName}</td>
         <td>${date(s.saleDate)}</td>
         <td>${status(s.paymentMethod ?? '')}</td>
+        <td>${status(s.status ?? '')}</td>
         <td style="text-align:right">${currency(s.totalAmount)}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
     openPrintWindow(printTemplate('Sales Report', `
       <table>
         <thead><tr>
-          <th style="width: 25%">Sale ID</th>
-          <th style="width: 25%">Date</th>
-          <th style="width: 25%">Payment</th>
-          <th style="width: 25%; text-align: right">Total</th>
+          <th style="width: 12%">Sale ID</th>
+          <th style="width: 20%">Customer</th>
+          <th style="width: 18%">Date</th>
+          <th style="width: 18%">Payment</th>
+          <th style="width: 15%">Status</th>
+          <th style="width: 17%; text-align: right">Total</th>
         </tr></thead>
-        <tbody>${rows || '<tr><td colspan="4">No records</td></tr>'}</tbody>
+        <tbody>${rows || '<tr><td colspan="6">No records</td></tr>'}</tbody>
       </table>`));
   };
 
@@ -165,15 +173,17 @@ export default function Reports() {
         <td>${c.fullName ?? '—'}</td>
         <td>${c.email ?? '—'}</td>
         <td>${c.phone ?? '—'}</td>
+        <td>${c.address ?? '—'}</td>
       </tr>`).join('');
     openPrintWindow(printTemplate('Customer Report', `
       <table>
         <thead><tr>
-          <th style="width: 35%">Name</th>
-          <th style="width: 35%">Email</th>
-          <th style="width: 30%">Phone</th>
+          <th style="width: 25%">Name</th>
+          <th style="width: 25%">Email</th>
+          <th style="width: 20%">Phone</th>
+          <th style="width: 30%">Address</th>
         </tr></thead>
-        <tbody>${rows || '<tr><td colspan="3">No records</td></tr>'}</tbody>
+        <tbody>${rows || '<tr><td colspan="4">No records</td></tr>'}</tbody>
       </table>`));
   };
 
@@ -298,21 +308,32 @@ export default function Reports() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th style={{ width: '25%' }}>Sale ID</th>
-                      <th style={{ width: '25%' }}>Date</th>
-                      <th style={{ width: '25%' }}>Payment Method</th>
-                      <th style={{ width: '25%', textAlign: 'right' }}>Total Amount</th>
+                      <th style={{ width: '12%' }}>Sale ID</th>
+                      <th style={{ width: '20%' }}>Customer</th>
+                      <th style={{ width: '18%' }}>Date</th>
+                      <th style={{ width: '18%' }}>Payment Method</th>
+                      <th style={{ width: '15%' }}>Status</th>
+                      <th style={{ width: '17%', textAlign: 'right' }}>Total Amount</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredSales.map((sale) => (
-                      <tr key={sale.id ?? sale.saleId}>
-                        <td>#{sale.saleId ?? sale.id}</td>
-                        <td>{date(sale.saleDate)}</td>
-                        <td>{status(sale.paymentMethod ?? '')}</td>
-                        <td style={{ textAlign: 'right', fontWeight: 700 }}>{currency(sale.totalAmount)}</td>
-                      </tr>
-                    ))}
+                    {filteredSales.map((sale) => {
+                      const custName = customerById[sale.customerId]?.fullName || `Customer #${sale.customerId || '-'}`;
+                      return (
+                        <tr key={sale.id ?? sale.saleId}>
+                          <td>#{sale.saleId ?? sale.id}</td>
+                          <td style={{ fontWeight: 500 }}>{custName}</td>
+                          <td>{date(sale.saleDate)}</td>
+                          <td>{status(sale.paymentMethod ?? '')}</td>
+                          <td>
+                            <span className={`status-badge ${sale.status?.toLowerCase() || ''}`}>
+                              {status(sale.status ?? '')}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: 'right', fontWeight: 700 }}>{currency(sale.totalAmount)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
