@@ -103,7 +103,12 @@ export default function Reports() {
       </tr>`).join('');
     openPrintWindow(printTemplate('Sales Report', `
       <table>
-        <thead><tr><th>Sale ID</th><th>Date</th><th>Payment</th><th>Total</th></tr></thead>
+        <thead><tr>
+          <th style="width: 25%">Sale ID</th>
+          <th style="width: 25%">Date</th>
+          <th style="width: 25%">Payment</th>
+          <th style="width: 25%; text-align: right">Total</th>
+        </tr></thead>
         <tbody>${rows || '<tr><td colspan="4">No records</td></tr>'}</tbody>
       </table>`));
   };
@@ -118,23 +123,39 @@ export default function Reports() {
       </tr>`).join('');
     openPrintWindow(printTemplate('Expense Report', `
       <table>
-        <thead><tr><th>Description</th><th>Category</th><th>Date</th><th>Amount</th></tr></thead>
+        <thead><tr>
+          <th style="width: 40%">Description</th>
+          <th style="width: 20%">Category</th>
+          <th style="width: 20%">Date</th>
+          <th style="width: 20%; text-align: right">Amount</th>
+        </tr></thead>
         <tbody>${rows || '<tr><td colspan="4">No records</td></tr>'}</tbody>
       </table>`));
   };
 
   const handlePrintInventory = () => {
-    const rows = (data.products || []).map(p => `
+    const rows = (data.products || []).map(p => {
+      const qty = Number(p.stockQuantity || 0);
+      const stockLabel = qty <= 0 ? 'Out of Stock' : qty <= 10 ? 'Low Stock' : 'In Stock';
+      return `
       <tr>
         <td>${p.productName ?? '—'}</td>
         <td>${p.category ?? '—'}</td>
         <td style="text-align:right">${number(p.stockQuantity)}</td>
-        <td style="text-align:right">${currency(p.sellingPrice ?? p.price ?? 0)}</td>
-      </tr>`).join('');
+        <td style="text-align:right">${currency(p.unitPrice ?? 0)}</td>
+        <td>${stockLabel}</td>
+      </tr>`;
+    }).join('');
     openPrintWindow(printTemplate('Inventory Report', `
       <table>
-        <thead><tr><th>Product</th><th>Category</th><th>Stock Qty</th><th>Price</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="4">No records</td></tr>'}</tbody>
+        <thead><tr>
+          <th style="width: 35%">Product</th>
+          <th style="width: 20%">Category</th>
+          <th style="width: 15%; text-align: right">Stock Qty</th>
+          <th style="width: 15%; text-align: right">Price</th>
+          <th style="width: 15%">Status</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="5">No records</td></tr>'}</tbody>
       </table>`));
   };
 
@@ -147,7 +168,11 @@ export default function Reports() {
       </tr>`).join('');
     openPrintWindow(printTemplate('Customer Report', `
       <table>
-        <thead><tr><th>Name</th><th>Email</th><th>Phone</th></tr></thead>
+        <thead><tr>
+          <th style="width: 35%">Name</th>
+          <th style="width: 35%">Email</th>
+          <th style="width: 30%">Phone</th>
+        </tr></thead>
         <tbody>${rows || '<tr><td colspan="3">No records</td></tr>'}</tbody>
       </table>`));
   };
@@ -156,10 +181,10 @@ export default function Reports() {
     openPrintWindow(printTemplate('Revenue Report', `
       <table>
         <thead><tr>
-          <th>Period</th>
-          <th style="text-align:right">Total Sales</th>
-          <th style="text-align:right">Total Expenses</th>
-          <th style="text-align:right">Profit</th>
+          <th style="width: 40%">Period</th>
+          <th style="width: 20%; text-align: right">Total Sales</th>
+          <th style="width: 20%; text-align: right">Total Expenses</th>
+          <th style="width: 20%; text-align: right">Profit</th>
         </tr></thead>
         <tbody>
           <tr>
@@ -273,10 +298,10 @@ export default function Reports() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Sale ID</th>
-                      <th>Date</th>
-                      <th>Payment Method</th>
-                      <th style={{ textAlign: 'right' }}>Total Amount</th>
+                      <th style={{ width: '25%' }}>Sale ID</th>
+                      <th style={{ width: '25%' }}>Date</th>
+                      <th style={{ width: '25%' }}>Payment Method</th>
+                      <th style={{ width: '25%', textAlign: 'right' }}>Total Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -325,11 +350,11 @@ export default function Reports() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Invoice No.</th>
-                    <th>Issue Date</th>
-                    <th>Due Date</th>
-                    <th>Status</th>
-                    <th style={{ textAlign: 'right' }}>Amount</th>
+                    <th style={{ width: '20%' }}>Invoice No.</th>
+                    <th style={{ width: '20%' }}>Issue Date</th>
+                    <th style={{ width: '20%' }}>Due Date</th>
+                    <th style={{ width: '20%' }}>Status</th>
+                    <th style={{ width: '20%', textAlign: 'right' }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -383,10 +408,10 @@ export default function Reports() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Description</th>
-                      <th>Category</th>
-                      <th>Date</th>
-                      <th style={{ textAlign: 'right' }}>Amount</th>
+                      <th style={{ width: '40%' }}>Description</th>
+                      <th style={{ width: '20%' }}>Category</th>
+                      <th style={{ width: '20%' }}>Date</th>
+                      <th style={{ width: '20%', textAlign: 'right' }}>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -433,11 +458,11 @@ export default function Reports() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Product Name</th>
-                    <th>Category</th>
-                    <th style={{ textAlign: 'right' }}>Stock Qty</th>
-                    <th style={{ textAlign: 'right' }}>Selling Price</th>
-                    <th>Status</th>
+                    <th style={{ width: '25%' }}>Product Name</th>
+                    <th style={{ width: '15%' }}>Category</th>
+                    <th style={{ width: '20%', textAlign: 'right' }}>Stock Qty</th>
+                    <th style={{ width: '20%', textAlign: 'right' }}>Selling Price</th>
+                    <th style={{ width: '20%' }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -450,7 +475,7 @@ export default function Reports() {
                         <td style={{ fontWeight: 500 }}>{product.productName}</td>
                         <td>{product.category ?? '—'}</td>
                         <td style={{ textAlign: 'right' }}>{number(qty)}</td>
-                        <td style={{ textAlign: 'right' }}>{currency(product.sellingPrice ?? product.price ?? 0)}</td>
+                        <td style={{ textAlign: 'right' }}>{currency(product.unitPrice ?? 0)}</td>
                         <td><span className={`status-badge ${stockStatus}`}>{stockLabel}</span></td>
                       </tr>
                     );
