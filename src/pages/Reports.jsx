@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import Icon from '../components/ui/Icon';
 import { BarChart, ChartCard, LineChart } from '../components/charts';
 import Button from '../components/ui/Button';
 import { ErrorState, LoadingState } from '../components/ui/LoadState';
@@ -8,11 +9,11 @@ import { useBusinessData } from '../api/resources';
 import { currency, date, indexById, lastMonthsSeries, number, status } from '../utils/formatters';
 
 const REPORT_TYPES = [
-  { key: 'Sales Report',     icon: '📈' },
-  { key: 'Revenue Report',   icon: '💰' },
-  { key: 'Expense Report',   icon: '📉' },
-  { key: 'Inventory Report', icon: '📦' },
-  { key: 'Customer Report',  icon: '👥' },
+  { key: 'Sales Report',     icon: 'sales'     },
+  { key: 'Revenue Report',   icon: 'revenue'   },
+  { key: 'Expense Report',   icon: 'expenses'  },
+  { key: 'Inventory Report', icon: 'inventory' },
+  { key: 'Customer Report',  icon: 'customers' },
 ];
 
 /** Build a simple print window from an HTML string */
@@ -225,7 +226,7 @@ export default function Reports() {
         description="Generate and print reports from live SmartBiz records."
         actions={(
           <Button variant="primary" onClick={printHandlers[selectedReport]}>
-            🖨 Print {selectedReport}
+            <Icon name="print" size={17} style={{ marginRight: 6 }} /> Print {selectedReport}
           </Button>
         )}
       />
@@ -243,7 +244,9 @@ export default function Reports() {
               borderColor: 'var(--blue)',
             } : {}}
           >
-            <span style={{ fontSize: '22px', display: 'block', marginBottom: '6px' }}>{icon}</span>
+            <span style={{ fontSize: '22px', display: 'flex', justifyContent: 'center', marginBottom: '6px' }}>
+              <Icon name={icon} size={24} />
+            </span>
             {key}
           </button>
         ))}
@@ -273,7 +276,7 @@ export default function Reports() {
             className="app-button ghost"
             onClick={() => { setFromDate(''); setToDate(''); }}
           >
-            ✕ Clear filter
+            <Icon name="close" size={15} /> Clear filter
           </button>
         )}
       </div>
