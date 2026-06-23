@@ -99,7 +99,9 @@ export default function Invoices() {
     const { invoice: inv, sale, items, customerById } = d;
     const customerName  = sale ? customerById[sale.customerId]?.fullName || `Customer #${sale.customerId}` : '—';
     const paymentMethod = sale ? status(sale.paymentMethod) : '—';
-    const subtotal = sale?.subtotal ?? inv.totalAmount;
+    const subtotal = items.length > 0
+      ? items.reduce((sum, item) => sum + item.totalPrice, 0)
+      : (sale?.subtotal ?? inv.totalAmount);
     const discount = sale?.discount ?? 0;
     const total    = inv.totalAmount ?? sale?.totalAmount;
 
@@ -174,7 +176,9 @@ export default function Invoices() {
 
     const customerName  = sale ? customerById[sale.customerId]?.fullName || `Customer #${sale.customerId}` : '—';
     const paymentMethod = sale ? status(sale.paymentMethod) : '—';
-    const subtotal = sale?.subtotal ?? inv.totalAmount;
+    const subtotal = pdfItems.length > 0
+      ? pdfItems.reduce((sum, item) => sum + item.totalPrice, 0)
+      : (sale?.subtotal ?? inv.totalAmount);
     const discount = sale?.discount ?? 0;
     const total    = inv.totalAmount ?? sale?.totalAmount;
 
@@ -303,6 +307,10 @@ export default function Invoices() {
     return { productName, quantity: isNaN(quantity) ? 0 : quantity, unitPrice: isNaN(unitPrice) ? 0 : unitPrice, totalPrice: isNaN(totalPrice) ? 0 : totalPrice };
   });
 
+  const modalSubtotal = viewItems.length > 0
+    ? viewItems.reduce((sum, item) => sum + item.totalPrice, 0)
+    : (saleDetails?.subtotal ?? selectedInvoice?.totalAmount ?? 0);
+
   return (
     <div className="page">
       <PageHeader eyebrow="Billing" title="Invoices" description="Live invoice records from smartbiz_db." />
@@ -411,7 +419,7 @@ export default function Invoices() {
               <div style={{ background: 'var(--app-bg)', padding: '16px', borderRadius: '12px', display: 'grid', gap: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                   <span style={{ color: 'var(--muted)' }}>Subtotal</span>
-                  <strong>{currency(saleDetails?.subtotal ?? selectedInvoice.totalAmount)}</strong>
+                  <strong>{currency(modalSubtotal)}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                   <span style={{ color: 'var(--muted)' }}>Discount</span>
