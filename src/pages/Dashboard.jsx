@@ -86,13 +86,21 @@ export default function Dashboard() {
           </div>
           <DataTable
             columns={['Sale ID', 'Customer', 'Amount', 'Date', 'Status']}
-            rows={sales.slice(0, 5).map((sale) => [
-              `SALE-${sale.id}`,
-              customerById[sale.customerId]?.fullName || `Customer #${sale.customerId || '-'}`,
-              currency(sale.totalAmount),
-              date(sale.saleDate),
-              status(sale.status),
-            ])}
+            rows={[...sales]
+              .sort((a, b) => {
+                const da = new Date(a.saleDate || 0).getTime();
+                const db = new Date(b.saleDate || 0).getTime();
+                return db - da || (b.id || 0) - (a.id || 0);
+              })
+              .slice(0, 5)
+              .map((sale) => [
+                `SALE-${sale.id}`,
+                customerById[sale.customerId]?.fullName || `Customer #${sale.customerId || '-'}`,
+                currency(sale.totalAmount),
+                date(sale.saleDate),
+                status(sale.status),
+              ])
+            }
           />
         </section>
         <section className="card">
@@ -100,14 +108,22 @@ export default function Dashboard() {
             <h2>Recent Invoices</h2>
           </div>
           <DataTable
-            columns={['Invoice Number', 'Sale', 'Total', 'Due Date', 'Status']}
-            rows={invoices.slice(0, 5).map((invoice) => [
-              invoice.invoiceNumber || `INV-${invoice.id}`,
-              `Sale #${invoice.saleId || '-'}`,
-              currency(invoice.totalAmount),
-              date(invoice.dueDate),
-              status(invoice.status),
-            ])}
+            columns={['Invoice Number', 'Sale', 'Total', 'Issue Date', 'Status']}
+            rows={[...invoices]
+              .sort((a, b) => {
+                const da = new Date(a.issueDate || 0).getTime();
+                const db = new Date(b.issueDate || 0).getTime();
+                return db - da || (b.id || 0) - (a.id || 0);
+              })
+              .slice(0, 5)
+              .map((invoice) => [
+                invoice.invoiceNumber || `INV-${invoice.id}`,
+                `Sale #${invoice.saleId || '-'}`,
+                currency(invoice.totalAmount),
+                date(invoice.issueDate),
+                status(invoice.status),
+              ])
+            }
           />
         </section>
       </section>
