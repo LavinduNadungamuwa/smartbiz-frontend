@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import useAuth from '../../store/useAuth';
 
 export default function Topbar({ onMenuClick }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem('sb_theme') || 'light');
+  const [theme, setTheme] = useState(() => localStorage.getItem('sb_theme') || 'dark');
   const { user: authUser } = useAuth();
 
   useEffect(() => {

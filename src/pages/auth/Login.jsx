@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { login } from '../../api/auth';
 import {
@@ -15,6 +15,16 @@ import './auth.css';
 export default function Login() {
   const navigate = useNavigate();
   const { saveAuth } = useAuth();
+
+  // Apply dark mode on login page (before the Topbar mounts)
+  useEffect(() => {
+    const saved = localStorage.getItem('sb_theme') || 'dark';
+    if (saved === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
