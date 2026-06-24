@@ -267,7 +267,7 @@ export default function Invoices() {
     doc.setFont('helvetica', 'normal'); setColour(200, 100, 0);
     doc.text('Discount', totX, y);
     doc.setFont('helvetica', 'bold'); setColour(200, 100, 0);
-    doc.text(`\u2212 ${currency(discount)}`, RM, y, { align: 'right' }); y += 5;
+    doc.text(`- ${currency(discount)}`, RM, y, { align: 'right' }); y += 5;
     doc.setDrawColor(180, 185, 200); doc.setLineWidth(0.5); doc.line(totX, y, RM, y); y += 8;
     doc.setFont('helvetica', 'bold'); doc.setFontSize(14); resetColour();
     doc.text('Total Amount', totX, y);
