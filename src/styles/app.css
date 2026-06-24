@@ -294,6 +294,14 @@ input {
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
+  overflow: hidden;
+}
+
+.avatar-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .mobile-menu,
@@ -2527,6 +2535,19 @@ input {
   padding: 14px 28px;
   max-width: 1600px;
   margin: 0 auto;
+}
+
+/* ── Section sub-heading ──────────────────────────────────────────────── */
+
+.s-edit-heading {
+  margin: 4px 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 /* ── Spin keyframe for loader ─────────────────────────────────────────── */

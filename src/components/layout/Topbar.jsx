@@ -21,6 +21,7 @@ export default function Topbar({ onMenuClick }) {
   const email = user.sub || user.email || 'smartbiz@account.com';
   const initials = email.slice(0, 2).toUpperCase();
   const businessName = user.businessName || 'SmartBiz Business';
+  const businessLogo = user.businessLogo || null;
 
   return (
     <header className="topbar">
@@ -50,7 +51,9 @@ export default function Topbar({ onMenuClick }) {
           ariaLabel="Toggle dark mode"
         />
         <div className="avatar" aria-label="User profile">
-          {initials}
+          {businessLogo
+            ? <img src={businessLogo} alt="Business logo" className="avatar-logo" />
+            : initials}
         </div>
       </div>
     </header>

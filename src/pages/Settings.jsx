@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import PageHeader from '../components/ui/PageHeader';
 import { useBusinessData } from '../api/resources';
 import { number } from '../utils/formatters';
+import useAuth from '../store/useAuth';
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -105,14 +106,15 @@ function AiStatusDot({ connected }) {
 
 export default function Settings() {
   const { data } = useBusinessData();
-  const user = readSavedUser();
+  const { user: authUser, updateUser } = useAuth();
+  const user = authUser || readSavedUser();
   const fileInputRef = useRef(null);
   const logoInputRef = useRef(null);
 
   // ── Business profile state
   const [business, setBusiness] = useState({
-    logo: null,
-    name: 'SmartBiz Solutions',
+    logo: user.businessLogo || null,
+    name: user.businessName || 'SmartBiz Solutions',
     email: user.email || user.sub || 'admin@smartbiz.lk',
     phone: '+94 77 123 4567',
     address: '42 Galle Road, Colombo 03, Sri Lanka',
@@ -152,7 +154,11 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => setBusiness(b => ({ ...b, logo: ev.target.result }));
+    reader.onload = (ev) => {
+      const logoDataUrl = ev.target.result;
+      setBusiness(b => ({ ...b, logo: logoDataUrl }));
+      updateUser({ businessLogo: logoDataUrl });
+    };
     reader.readAsDataURL(file);
   }
 
@@ -226,6 +232,7 @@ export default function Settings() {
             <input ref={logoInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoChange} />
           </div>
 
+          <h3 className="s-edit-heading">Edit Business Details</h3>
           <div className="sf-grid-2">
             <FormField label="Business Name">
               <SInput value={business.name} onChange={e => setBusiness(b => ({ ...b, name: e.target.value }))} placeholder="Your Business Name" />
@@ -245,7 +252,20 @@ export default function Settings() {
           </FormField>
 
           <div className="s-card-actions">
-            <button type="button" className="s-btn s-btn-primary">
+            <button
+              type="button"
+              className="s-btn s-btn-primary"
+              onClick={() => {
+                updateUser({ businessName: business.name });
+                const btn = document.getElementById('biz-save-btn');
+                if (btn) {
+                  btn.textContent = '✓ Saved!';
+                  btn.classList.add('saved');
+                  setTimeout(() => { btn.textContent = 'Save Changes'; btn.classList.remove('saved'); }, 2000);
+                }
+              }}
+              id="biz-save-btn"
+            >
               <SaveIcon /> Save Changes
             </button>
           </div>

@@ -71,11 +71,19 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const updateUser = (fields = {}) => {
+    setUser(prev => {
+      const updated = { ...(prev || {}), ...fields };
+      localStorage.setItem('sb_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const role = localStorage.getItem('sb_role') || '';
   const isAdmin = role.includes('ADMIN');
 
   return (
-    <AuthContext.Provider value={{ token, user, isAdmin, saveAuth, logout }}>
+    <AuthContext.Provider value={{ token, user, isAdmin, saveAuth, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
