@@ -1,8 +1,9 @@
-SmartBiz — AI-Powered Business Management Suite
+SmartBiz — AI-Powered Business Management Suite 
+-
 A full-stack ERP-lite platform for small and medium businesses to manage sales, inventory, customers, and daily operations — with OpenAI-powered insights, report generation, and email/content writing built in.
----
-Features
 
+Features
+-
 Business Owner (Web & Mobile)
 Dashboard overview — sales, inventory, profits at a glance
 Customer and supplier management
@@ -16,8 +17,9 @@ Admin Panel
 Manage registered businesses and users
 Review AI usage logs and system-wide statistics
 Manage subscription or pricing plans
----
+
 Tech Stack
+-
 Layer	Technology
 Frontend (Web)	React + Vite, React Router v6, Axios, Recharts
 Frontend (Mobile)	React Native (planned)
@@ -25,7 +27,7 @@ Backend	Spring Boot 3, MySQL
 AI Integration	OpenAI API (GPT)
 Authentication	JWT (JSON Web Tokens)
 Deployment	AWS EC2 with custom domain
----
+
 Project Structure
 ```
 smartbiz/
@@ -54,14 +56,15 @@ smartbiz/
 ```
 ---
 Getting Started
-
+-
 Prerequisites
 Node.js 18+
 Java 17+
 MySQL 8+
 An OpenAI API key
----
+
 Backend Setup
+-
 Create the database
 ```sql
 CREATE DATABASE smartbiz_db;
@@ -82,7 +85,7 @@ cd smartbiz-backend
 ./mvnw spring-boot:run
 ```
 The API will start at `http://localhost:8080`. Tables are created automatically via `spring.jpa.hibernate.ddl-auto=update`.
----
+
 Frontend Setup
 Install dependencies
 ```bash
@@ -100,8 +103,9 @@ Build for production
 npm run build
 ```
 Output goes to the `dist/` folder, ready to deploy to a web server or S3.
----
+
 API Overview
+-
 All endpoints (except auth) require a `Bearer` token in the `Authorization` header.
 Resource	Base path
 Auth	`POST /api/auth/register`, `POST /api/auth/login`
@@ -143,19 +147,21 @@ Create a `.env` file in `smartbiz-frontend/` if you need to override the API bas
 VITE_API_BASE_URL=http://localhost:8080
 ```
 Then update `src/api/axiosClient.js` to use `import.meta.env.VITE_API_BASE_URL`.
----
+
 Deployment (AWS EC2)
+-
 Build the frontend: `npm run build` → upload `dist/` to your server or S3 + CloudFront
 Package the backend: `./mvnw package` → upload the `.jar` to EC2
 Run with: `java -jar smartbiz-backend.jar --spring.config.location=/etc/smartbiz/application.properties`
 Use Nginx as a reverse proxy — serve the frontend on port 80/443, proxy `/api/*` to port 8080
 Set up SSL with Let's Encrypt (`certbot`)
----
-Security Notes
+
+Security Note
+-
 JWT tokens are signed server-side and validated on every request
 Role-based access control: `ROLE_ADMIN` can create/update/delete; `ROLE_USER` has read access
 Never expose your `openai.api.key` or database password in the repository — use environment variables or AWS Secrets Manager in production
 Tighten CORS in `CorsConfig.java` before going live — replace `allowedOrigins("*")` with your actual domain
----
+
 
 This project was developed as a final project for the AFSD programme. 
