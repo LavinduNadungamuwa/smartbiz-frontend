@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+/* Use the same theme variables as the main app (light + dark modes) */
+:root {
+  --app-bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-soft: #f9fbff;
+  --border: #e5e9f1;
+  --text: #172033;
+  --muted: #667085;
+  --blue: #2563eb;
+  --blue-600: #1d4ed8;
+  --blue-soft: #eaf1ff;
+  --green: #16a34a;
+  --green-soft: #e9f8ef;
+  --orange: #f59e0b;
+  --orange-soft: #fff5df;
+  --red: #dc2626;
+  --red-soft: #fff1f1;
+  --shadow: 0 14px 40px rgba(30, 41, 59, 0.08);
+  --radius: 16px;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* Dark theme matching the main app */
+.dark {
+  --app-bg: #0b1220;
+  --surface: #0f1724;
+  --surface-soft: #0b1226;
+  --border: #172033;
+  --text: #e6eef8;
+  --muted: #9aa9bf;
+  --blue: #60a5fa;
+  --blue-600: #3b82f6;
+  --blue-soft: rgba(96, 165, 250, 0.08);
+  --green: #34d399;
+  --green-soft: rgba(52, 211, 153, 0.06);
+  --orange: #fcd34d;
+  --orange-soft: rgba(252, 211, 77, 0.06);
+  --red: #fb7185;
+  --red-soft: rgba(251, 113, 133, 0.04);
+  --shadow: 0 10px 30px rgba(2, 6, 23, 0.6);
+}
+
+/* Ensure base page uses app variables */
+html, body, #root { height: 100%; width: 100%; }
+
+.auth-root {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  background: radial-gradient(800px 400px at 10% 20%, rgba(37,99,235,0.06), transparent 6%),
+              radial-gradient(700px 360px at 85% 80%, rgba(59,130,246,0.04), transparent 5%),
+              linear-gradient(180deg, var(--app-bg) 0%, var(--surface-soft) 100%);
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* ── Brand panel (left) ──────────────────────────────────── */
+.auth-panel--brand {
+  position: relative;
+  width: 420px;
+  flex: 0 0 420px;
+  height: 100%;
+  /* soft blue-branded left panel using surface and accents */
+  background: linear-gradient(180deg, rgba(37,99,235,0.06), rgba(37,99,235,0.03));
+  display: flex;
+  align-items: center;
+  padding: 60px 48px;
+  overflow: hidden;
+  border-right: 1px solid var(--border);
+  backdrop-filter: blur(4px) saturate(120%);
+}
+
+.brand-content { position: relative; z-index: 2; }
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--blue-600) 100%);
+  border-radius: 12px;
+  margin-bottom: 28px;
+  box-shadow: 0 10px 40px rgba(37,99,235,0.08);
+}
+.brand-logo__icon {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.brand-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 42px;
+  color: var(--blue);
+  line-height: 1.05;
+  letter-spacing: -1px;
+  margin-bottom: 12px;
+  text-shadow: 0 6px 22px rgba(37,99,235,0.06);
+}
+
+.brand-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 300px;
+  margin-bottom: 36px;
+}
+
+.brand-features { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.brand-features li { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--muted); }
+.feat-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+
+/* subtle grid overlay */
+.brand-grid { position: absolute; inset: 0; z-index: 1; opacity: 0.05; background-image: linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(180deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 28px 28px, 28px 28px; }
+
+/* ── Form panel (right) ──────────────────────────────────── */
+.auth-panel--form {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 40px;
+  background: transparent;
+  overflow: hidden; /* prevent panel from scrolling */
+}
+
+.form-card {
+  width: 100%;
+  max-width: 550px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px) saturate(120%);
+  /* ensure the card never exceeds the viewport height; internal scroll if needed */
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  position: relative;
+}
+
+/* Small screens: make card fit comfortably and avoid scrolling where possible */
+@media (max-height: 700px) { .form-card { max-height: calc(100vh - 48px); } }
+
+.form-header { margin-bottom: 24px; }
+.form-title { font-family: 'DM Serif Display', serif; font-size: 30px; color: var(--blue); margin-bottom: 8px; }
+.form-subtitle { font-size: 14px; color: var(--muted); }
+
+/* ── Error banner ────────────────────────────────────────── */
+.form-error { display: flex; align-items: center; gap: 10px; background: var(--red-soft); border: 1px solid rgba(220,38,38,0.12); border-radius: 8px; padding: 10px 12px; color: var(--red); font-size: 13px; margin-bottom: 18px; }
+
+/* ── Fields ──────────────────────────────────────────────── */
+.field { margin-bottom: 14px; display: flex; flex-direction: column; gap: 7px; }
+.field__label { font-size: 13px; font-weight: 500; color: var(--muted); }
+
+.field__input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text);
+  caret-color: var(--text);
+  outline: none;
+  transition: border-color 0.14s, box-shadow 0.14s, transform 0.12s;
+  width: 100%;
+}
+.field__input::placeholder { color: var(--muted); }
+.field__input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.12); transform: translateY(-1px); }
+.field__input--error { border-color: rgba(220,38,38,0.4); }
+
+/* Add subtle blue tint to inputs that have content (typed or valid) */
+.field__input:not(:placeholder-shown),
+.field__input:valid {
+  box-shadow: inset 0 0 0 1000px rgba(37,99,235,0.02);
+}
+
+/* Ensure focused + filled keeps tint but shows blue border */
+.field__input:not(:placeholder-shown):focus,
+.field__input:valid:focus {
+  border-color: var(--blue);
+  box-shadow: inset 0 0 0 1000px rgba(37,99,235,0.06), 0 0 0 3px rgba(37,99,235,0.12);
+}
+
+/* Keep inputs readable when browser autofills and preserve tint using background-image overlay */
+input.field__input:-webkit-autofill,
+input.field__input:-webkit-autofill:focus,
+input.field__input:-webkit-autofill:hover {
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text) !important;
+  background-color: var(--surface) !important;
+  -webkit-box-shadow: 0 0 0 30px var(--surface) inset !important;
+  background-image: linear-gradient(rgba(37,99,235,0.03), rgba(37,99,235,0.03)) !important;
+  background-blend-mode: overlay !important;
+}
+
+/* Firefox autofill tint */
+input.field__input:-moz-autofill,
+input.field__input:-moz-autofill:focus {
+  box-shadow: 0 0 0 30px var(--surface) inset !important;
+  -moz-text-fill-color: var(--text) !important;
+  background-image: linear-gradient(rgba(37,99,235,0.03), rgba(37,99,235,0.03)) !important;
+  background-blend-mode: overlay !important;
+}
+
+.field__password-wrap { position: relative; }
+.field__password-wrap .field__input { padding-right: 44px; }
+.field__eye { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--muted); display: flex; padding: 4px; }
+.field__eye:hover { color: var(--blue); }
+
+.field__error { font-size: 12px; color: #ffbebe; margin-top: -2px; }
+
+/* ── Divider ─────────────────────────────────────────────── */
+.field-divider { display: flex; align-items: center; gap: 12px; margin: 4px 0 18px; }
+.field-divider::before, .field-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+.field-divider span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+
+/* ── Password strength ───────────────────────────────────── */
+.pw-strength { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.pw-strength__bars { display: flex; gap: 4px; flex: 1; }
+.pw-strength__bar { height: 4px; flex: 1; border-radius: 3px; background: rgba(255,255,255,0.03); transition: background 0.3s; }
+.pw-strength__label { font-size: 12px; min-width: 40px; text-align: right; font-weight: 500; color: var(--muted); }
+
+/* ── Primary button ──────────────────────────────────────── */
+.btn-primary {
+  width: 100%;
+  padding: 13px 24px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-600));
+  color: #ffffff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  border: 1px solid rgba(37,99,235,0.08);
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.12s, box-shadow 0.18s, opacity 0.12s;
+  margin-top: 6px;
+}
+.btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 18px 60px rgba(37,99,235,0.08), 0 6px 20px rgba(13,37,95,0.08); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.spinner { width: 16px; height: 16px; border: 2px solid rgba(2,6,8,0.3); border-top-color: var(--blue-600); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Footer ──────────────────────────────────────────────── */
+.form-footer { text-align: center; margin-top: 18px; font-size: 13px; color: var(--muted); }
+.form-link { color: var(--blue); text-decoration: none; font-weight: 600; }
+.form-link:hover { text-decoration: underline; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .auth-panel--brand { display: none; }
+  .auth-panel--form { padding: 32px 20px; }
+  .field-row { flex-direction: column; gap: 0; }
+}
+
+/* layout helpers for form rows */
+.field-row {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.field--half {
+  flex: 1;
+  min-width: 0; /* prevents overflow of long content */
+}
+
+/* keep stacking on small screens (already present) */
+@media (max-width: 768px) {
+  .field-row { flex-direction: column; gap: 12px; }
+}
