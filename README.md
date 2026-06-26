@@ -11,9 +11,6 @@ Product and stock management (add / update / delete)
 Sales and invoice management
 Daily income and expense tracking
 AI business insights — ask in plain English: "How did I perform last month?"
-AI email composer — "Write a thank-you email to my supplier"
-AI marketing post generator — "Write a Facebook post for our 50% off sale"
-Admin Panel
 Manage registered businesses and users
 Review AI usage logs and system-wide statistics
 Manage subscription or pricing plans
